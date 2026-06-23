@@ -1,0 +1,63 @@
+{
+  "name": "npc-maker-pro",
+  "version": "2.0.0",
+  "description": "Professional NPC Maker - Create and manage NPCs for OpenTibia servers",
+  "main": "public/electron.js",
+  "homepage": "./",
+  "author": "OpenTibia Community",
+  "license": "MIT",
+  "scripts": {
+    "react-start": "set PORT=3003 && set BROWSER=none && react-scripts start",
+    "react-build": "react-scripts build",
+    "electron-start": "electron .",
+    "electron-dev": "concurrently \"npm run react-start\" \"wait-on http://localhost:3003 && electron .\"",
+    "electron-build": "npm run react-build && electron-builder",
+    "build": "npm run react-build && npm run electron-build",
+    "start": "npm run build && electron ."
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "electron-is-dev": "^3.0.1"
+  },
+  "devDependencies": {
+    "concurrently": "^7.6.0",
+    "electron": "latest",
+    "electron-builder": "latest",
+    "react-scripts": "^5.0.1",
+    "wait-on": "^7.0.1"
+  },
+  "build": {
+    "appId": "com.openTibia.canaryNpcMaker",
+    "productName": "NPC Maker Pro",
+    "files": [
+      "build/**/*",
+      "public/electron.js"
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "NPC Maker Pro"
+    }
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}
