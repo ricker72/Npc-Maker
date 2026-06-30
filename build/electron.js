@@ -138,7 +138,7 @@ function createMainWindow() {
       devTools: false,
       preload: path.join(__dirname, 'preload.js')
     },
-    icon: path.join(__dirname, '../public/icon.ico')
+    icon: path.join(__dirname, 'icon.ico')
   });
 
   hardenWindow(mainWindow);

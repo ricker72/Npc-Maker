@@ -1,6 +1,6 @@
 {
   "name": "npc-maker-pro",
-  "version": "2.6.0",
+  "version": "2.6.1",
   "description": "NPC Maker Pro - Crea y gestiona NPCs para servidores OpenTibia/Canary/CrystalServer",
   "main": "public/electron.js",
   "homepage": "./",
@@ -28,6 +28,7 @@
     "wait-on": "^7.0.1"
   },
   "build": {
+    "extends": null,
     "appId": "com.opentibia.npcmakerpro",
     "productName": "NPC Maker Pro",
     "asar": true,
@@ -41,6 +42,7 @@
       "public/preload.js",
       "public/launcher.html",
       "public/launcher-preload.js",
+      "public/icon.ico",
       "!**/*.map"
     ],
     "directories": {
@@ -48,6 +50,7 @@
       "buildResources": "build-resources"
     },
     "win": {
+      "icon": "build-resources/icon.ico",
       "target": [
         { "target": "nsis", "arch": ["x64", "ia32"] },
         { "target": "portable", "arch": ["x64", "ia32"] }
