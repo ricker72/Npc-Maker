@@ -1,51 +1,72 @@
 {
   "name": "npc-maker-pro",
-  "version": "2.0.0",
-  "description": "Professional NPC Maker - Create and manage NPCs for OpenTibia servers",
+  "version": "2.5.2",
+  "description": "NPC Maker Pro - Crea y gestiona NPCs para servidores OpenTibia/Canary/CrystalServer",
   "main": "public/electron.js",
   "homepage": "./",
   "author": "OpenTibia Community",
   "license": "MIT",
+  "private": true,
   "scripts": {
-    "react-start": "set PORT=3003 && set BROWSER=none && react-scripts start",
+    "react-start": "react-scripts start",
     "react-build": "react-scripts build",
-    "electron-start": "electron .",
-    "electron-dev": "concurrently \"npm run react-start\" \"wait-on http://localhost:3003 && electron .\"",
+    "electron-start": "wait-on http://localhost:3000 && electron .",
+    "electron-dev": "concurrently \"npm run react-start\" \"wait-on http://localhost:3000 && electron .\"",
     "electron-build": "npm run react-build && electron-builder",
     "build": "npm run react-build && npm run electron-build",
-    "start": "npm run build && electron ."
+    "build:win": "npm run react-build && electron-builder --win",
+    "start": "react-scripts start"
   },
-  "dependencies": {
+  "dependencies": {},
+  "devDependencies": {
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "electron-is-dev": "^3.0.1"
-  },
-  "devDependencies": {
+    "react-scripts": "5.0.1",
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.3",
     "concurrently": "^7.6.0",
-    "electron": "latest",
-    "electron-builder": "latest",
-    "react-scripts": "^5.0.1",
     "wait-on": "^7.0.1"
   },
   "build": {
-    "appId": "com.openTibia.canaryNpcMaker",
+    "appId": "com.opentibia.npcmakerpro",
     "productName": "NPC Maker Pro",
+    "asar": true,
+    "compression": "store",
+    "removePackageScripts": true,
+    "npmRebuild": false,
+    "buildDependenciesFromSource": false,
     "files": [
       "build/**/*",
-      "public/electron.js"
+      "public/electron.js",
+      "public/preload.js",
+      "public/launcher.html",
+      "public/launcher-preload.js",
+      "!**/*.map"
     ],
+    "directories": {
+      "output": "dist",
+      "buildResources": "build-resources"
+    },
     "win": {
       "target": [
-        "nsis",
-        "portable"
-      ]
+        { "target": "nsis", "arch": ["x64"] },
+        { "target": "portable", "arch": ["x64"] }
+      ],
+      "certificateFile": null,
+      "certificatePassword": null
     },
     "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
+      "oneClick": true,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": false,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "NPC Maker Pro"
+      "shortcutName": "NPC Maker Pro",
+      "differentialPackage": false,
+      "deleteAppDataOnUninstall": true
+    },
+    "portable": {
+      "artifactName": "NPC-Maker-Pro-Portable.exe"
     }
   },
   "browserslist": {

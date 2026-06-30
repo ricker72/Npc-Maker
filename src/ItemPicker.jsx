@@ -8,6 +8,7 @@ const ItemPicker = ({ onAdd, label = 'Agregar item' }) => {
   const [sellPrice, setSellPrice] = useState('');
   const [count, setCount] = useState(1);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [notice, setNotice] = useState(null);
 
   const suggestions = useMemo(() => {
     if (!search || search.length < 2) return [];
@@ -21,15 +22,16 @@ const ItemPicker = ({ onAdd, label = 'Agregar item' }) => {
     setSelectedItem(item);
     setSearch(`${item.name} (#${item.id})`);
     setShowSuggestions(false);
+    setNotice(null);
   };
 
   const handleAdd = () => {
     if (!selectedItem) {
-      alert('Selecciona un item válido de la lista de sugerencias');
+      setNotice({ type: 'error', text: '⚠️ Selecciona un item válido de la lista de sugerencias.' });
       return;
     }
     if (!buyPrice && !sellPrice) {
-      alert('Ingresa al menos un precio de compra o venta');
+      setNotice({ type: 'error', text: '⚠️ Ingresa al menos un precio de compra o venta.' });
       return;
     }
     onAdd({
@@ -44,6 +46,8 @@ const ItemPicker = ({ onAdd, label = 'Agregar item' }) => {
     setBuyPrice('');
     setSellPrice('');
     setCount(1);
+    setNotice({ type: 'success', text: '✅ Item agregado.' });
+    setTimeout(() => setNotice(null), 1800);
   };
 
   return (
@@ -110,6 +114,7 @@ const ItemPicker = ({ onAdd, label = 'Agregar item' }) => {
         </div>
         <button className="btn btn-gold-sm" onClick={handleAdd}>➕ {label}</button>
       </div>
+      {notice && <div className={`inline-notice ${notice.type}`}>{notice.text}</div>}
     </div>
   );
 };

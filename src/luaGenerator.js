@@ -145,7 +145,7 @@ export function getNpcFileName(name) {
   return `${sanitizeName(name)}.lua`;
 }
 
-// URL del API público usado por npc-maker para renderizar el sprite del outfit
+// URL del API público usado por canary-npc-maker para renderizar el sprite del outfit
 export function buildOutfitImageUrl(outfit) {
   const { lookType, lookHead, lookBody, lookLegs, lookFeet, lookAddons, lookMount } = outfit;
   const base = 'https://outfit-images-oracle.ots.me/latest_walk/animoutfit.php';

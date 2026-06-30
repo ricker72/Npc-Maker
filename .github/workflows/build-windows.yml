@@ -1,0 +1,39 @@
+name: Build Windows Installer
+
+# Genera el instalador .exe real de NPC Maker Pro en una máquina Windows
+# nativa de GitHub Actions (con internet completo, sin restricciones).
+# Se ejecuta automáticamente al hacer push, o manualmente desde la pestaña
+# "Actions" del repositorio con el botón "Run workflow".
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch: {}
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Instalar dependencias
+        run: npm install
+
+      - name: Compilar instalador Windows (.exe)
+        run: npm run build:win
+
+      - name: Subir instalador como artifact descargable
+        uses: actions/upload-artifact@v4
+        with:
+          name: NPC-Maker-Pro-Windows
+          path: |
+            dist/*.exe
+            dist/latest.yml
+          retention-days: 30

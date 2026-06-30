@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NPC Maker Pro - Iniciando</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #0a0a0f;
+      font-family: 'Segoe UI', 'Roboto', sans-serif;
+      overflow: hidden;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+    }
+
+    .launcher-container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at center, #111122, #050508);
+    }
+
+    .particles-bg {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background-image:
+        radial-gradient(2px 2px at 15% 25%, #d4af37, transparent),
+        radial-gradient(2px 2px at 35% 65%, #fff, transparent),
+        radial-gradient(2px 2px at 55% 15%, #d4af37, transparent),
+        radial-gradient(2px 2px at 75% 85%, #fff, transparent),
+        radial-gradient(2px 2px at 90% 40%, #d4af37, transparent),
+        radial-gradient(3px 3px at 45% 90%, #d4af37, transparent);
+      background-size: 200% 200%;
+      animation: moveParticles 12s linear infinite alternate;
+      opacity: 0.4;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    @keyframes moveParticles {
+      0% { background-position: 0% 0%; }
+      100% { background-position: 100% 100%; }
+    }
+
+    #robotCanvas {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      z-index: 1; pointer-events: none;
+    }
+
+    .info-layer {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+      color: #fff;
+      padding: 2rem;
+      max-width: 850px;
+      width: 90%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .app-title {
+      font-size: 4.2rem;
+      font-weight: 800;
+      letter-spacing: 5px;
+      text-shadow: 0 0 10px #d4af37, 0 0 20px #d4af37, 0 0 40px #d4af37;
+      margin-bottom: 0.3rem;
+      animation: glitch 2.5s infinite;
+      font-family: 'Courier New', monospace;
+    }
+
+    @keyframes glitch {
+      0%, 100% { transform: skew(0deg, 0deg); opacity: 1; }
+      4% { transform: skew(3deg, -1deg); opacity: 0.9; text-shadow: 3px 0 red, -3px 0 blue; }
+      8% { transform: skew(-2deg, 1deg); opacity: 1; text-shadow: 0 0 20px #d4af37; }
+      12% { transform: skew(0deg, 0deg); }
+    }
+
+    .app-version { font-size: 1.4rem; color: #aaaaaa; letter-spacing: 3px; margin-bottom: 0.2rem; font-weight: 300; }
+
+    .app-developer {
+      font-size: 1.1rem; color: #777; margin-bottom: 2rem;
+      border-bottom: 1px solid #222; padding-bottom: 1rem; width: 80%; letter-spacing: 1px;
+    }
+
+    .progress-container { width: 80%; max-width: 500px; margin-top: 1rem; }
+
+    .progress-bar {
+      width: 100%; height: 6px; background: #1a1a2e; border-radius: 10px;
+      overflow: hidden; box-shadow: inset 0 0 8px #000;
+    }
+
+    .progress-fill {
+      height: 100%; width: 0%;
+      background: linear-gradient(90deg, #b8960f, #f9e47a, #d4af37);
+      background-size: 200% 100%;
+      border-radius: 10px;
+      transition: width 0.2s ease;
+      animation: shimmer 1.8s infinite;
+      box-shadow: 0 0 20px #d4af37;
+    }
+
+    @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+
+    .progress-text { margin-top: 0.8rem; font-size: 0.9rem; color: #555; letter-spacing: 4px; font-weight: 300; }
+
+    .phase-badge {
+      position: absolute; bottom: 30px; right: 40px; color: #222;
+      font-size: 0.7rem; letter-spacing: 4px; font-weight: 700; z-index: 3;
+      background: rgba(255,255,255,0.03); padding: 5px 12px; border-radius: 20px;
+      border: 1px solid #1a1a2e; transition: all 0.5s ease;
+    }
+
+    .phase-badge.active { color: #d4af37; border-color: #d4af37; box-shadow: 0 0 15px rgba(212, 175, 55, 0.2); }
+
+    @media (max-width: 600px) {
+      .app-title { font-size: 2.4rem; }
+      .app-version { font-size: 1rem; }
+      .app-developer { font-size: 0.8rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="launcher-container">
+  <div class="particles-bg"></div>
+  <canvas id="robotCanvas"></canvas>
+
+  <div class="info-layer" id="infoLayer">
+    <div class="app-title">NPC MAKER PRO</div>
+    <div class="app-version">v2.2.0</div>
+    <div class="app-developer">⚡ Iniciando aplicación ⚡</div>
+
+    <div class="progress-container">
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+      <div class="progress-text" id="progressText">0%</div>
+    </div>
+  </div>
+
+  <div class="phase-badge" id="phaseBadge">● INICIALIZANDO</div>
+</div>
+
+<script>
+  (function () {
+    const canvas = document.getElementById('robotCanvas');
+    const ctx = canvas.getContext('2d');
+    const progressFill = document.getElementById('progressFill');
+    const progressText = document.getElementById('progressText');
+    const phaseBadge = document.getElementById('phaseBadge');
+    const developerLine = document.querySelector('.app-developer');
+
+    let width, height;
+    function resize() {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = width;
+      canvas.height = height;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    const robotPoints = [
+      [0.50, 0.08],
+      [0.38, 0.12], [0.62, 0.12], [0.62, 0.25], [0.38, 0.25], [0.38, 0.12],
+      [0.43, 0.17], [0.57, 0.17],
+      [0.47, 0.27], [0.53, 0.27],
+      [0.30, 0.30], [0.70, 0.30],
+      [0.70, 0.50], [0.30, 0.50], [0.30, 0.30],
+      [0.35, 0.55], [0.65, 0.55],
+      [0.30, 0.35], [0.18, 0.45], [0.18, 0.55], [0.30, 0.50],
+      [0.70, 0.35], [0.82, 0.45], [0.82, 0.55], [0.70, 0.50],
+      [0.38, 0.58], [0.38, 0.75], [0.45, 0.85], [0.32, 0.85],
+      [0.62, 0.58], [0.62, 0.75], [0.68, 0.85], [0.55, 0.85],
+      [0.45, 0.35], [0.55, 0.35],
+      [0.45, 0.45], [0.55, 0.45],
+    ];
+
+    const uiPoints = [];
+    for (let row = 0; row < 7; row++) {
+      for (let col = 0; col < 12; col++) {
+        const x = 0.08 + col * 0.075;
+        const y = 0.08 + row * 0.13;
+        if (!(x > 0.35 && x < 0.65 && y > 0.35 && y < 0.65)) {
+          uiPoints.push([x, y]);
+        }
+      }
+    }
+    for (let i = 0; i < 15; i++) {
+      const angle = (i / 15) * Math.PI * 2;
+      const radius = 0.20;
+      uiPoints.push([0.50 + Math.cos(angle) * radius, 0.40 + Math.sin(angle) * radius * 0.6]);
+    }
+    for (let i = 0; i < 8; i++) {
+      uiPoints.push([0.15 + i * 0.10, 0.75]);
+      uiPoints.push([0.15 + i * 0.10, 0.75 - (0.05 + Math.random() * 0.15)]);
+    }
+
+    const maxPoints = Math.max(robotPoints.length, uiPoints.length);
+    const startPts = [];
+    const endPts = [];
+    for (let i = 0; i < maxPoints; i++) {
+      const s = robotPoints[i % robotPoints.length];
+      const e = uiPoints[i % uiPoints.length];
+      startPts.push([s[0], s[1]]);
+      endPts.push([e[0], e[1]]);
+    }
+
+    let progress = 0;
+    let currentPhase = 'intro';
+    let animationFrame;
+
+    function draw() {
+      ctx.clearRect(0, 0, width, height);
+
+      let t = 0;
+      if (progress > 30 && progress <= 70) {
+        t = (progress - 30) / 40;
+        currentPhase = 'transform';
+        phaseBadge.textContent = '⚡ CONFIGURANDO ⚡';
+        phaseBadge.classList.add('active');
+      } else if (progress > 70) {
+        t = 1;
+        currentPhase = 'ui';
+        phaseBadge.textContent = '● PREPARANDO INTERFAZ';
+        phaseBadge.classList.add('active');
+      } else {
+        t = 0;
+        currentPhase = 'intro';
+        phaseBadge.textContent = '● INICIALIZANDO';
+        phaseBadge.classList.remove('active');
+      }
+
+      const currentPoints = startPts.map((start, i) => {
+        const end = endPts[i % endPts.length];
+        return [
+          start[0] + (end[0] - start[0]) * t,
+          start[1] + (end[1] - start[1]) * t,
+        ];
+      });
+
+      ctx.strokeStyle = '#d4af37';
+      ctx.lineWidth = 1.8;
+      ctx.shadowColor = '#d4af37';
+      ctx.shadowBlur = 12;
+
+      if (currentPhase === 'intro' || currentPhase === 'transform') {
+        ctx.beginPath();
+        for (let i = 0; i < currentPoints.length - 1; i++) {
+          const [x1, y1] = currentPoints[i];
+          const [x2, y2] = currentPoints[i + 1];
+          if (i === 0) ctx.moveTo(x1 * width, y1 * height);
+          ctx.lineTo(x2 * width, y2 * height);
+        }
+        ctx.stroke();
+
+        const [x1, y1] = currentPoints[0];
+        const [x2, y2] = currentPoints[currentPoints.length - 1];
+        ctx.beginPath();
+        ctx.moveTo(x1 * width, y1 * height);
+        ctx.lineTo(x2 * width, y2 * height);
+        ctx.stroke();
+
+        ctx.fillStyle = '#d4af37';
+        ctx.shadowBlur = 20;
+        currentPoints.forEach(([x, y]) => {
+          ctx.beginPath();
+          ctx.arc(x * width, y * height, 3, 0, Math.PI * 2);
+          ctx.fill();
+        });
+      } else {
+        ctx.shadowBlur = 10;
+        ctx.lineWidth = 1.2;
+
+        ctx.fillStyle = '#d4af37';
+        currentPoints.forEach(([x, y]) => {
+          ctx.shadowBlur = 15;
+          ctx.beginPath();
+          ctx.arc(x * width, y * height, 2.5, 0, Math.PI * 2);
+          ctx.fill();
+        });
+
+        ctx.shadowBlur = 20;
+        ctx.strokeStyle = '#d4af37';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(width * 0.08, height * 0.08, width * 0.25, height * 0.15);
+        ctx.strokeRect(width * 0.67, height * 0.08, width * 0.25, height * 0.15);
+        ctx.strokeRect(width * 0.25, height * 0.35, width * 0.50, height * 0.30);
+
+        ctx.strokeStyle = '#f9e47a';
+        ctx.lineWidth = 1.5;
+        ctx.shadowBlur = 8;
+        for (let i = 0; i < 5; i++) {
+          const xBase = width * 0.30 + i * (width * 0.09);
+          const heightBar = height * (0.10 + Math.sin(Date.now() / 1000 + i) * 0.05);
+          ctx.beginPath();
+          ctx.moveTo(xBase, height * 0.55);
+          ctx.lineTo(xBase, height * 0.55 - heightBar);
+          ctx.stroke();
+        }
+
+        ctx.fillStyle = 'rgba(212, 175, 55, 0.15)';
+        ctx.font = 'bold 18px monospace';
+        ctx.shadowBlur = 0;
+        ctx.fillText('SISTEMA OPERATIVO', width * 0.10, height * 0.28);
+        ctx.fillStyle = 'rgba(212, 175, 55, 0.25)';
+        ctx.fillText('NPC MAKER PRO', width * 0.72, height * 0.28);
+      }
+
+      animationFrame = requestAnimationFrame(draw);
+    }
+    draw();
+
+    // ---- PROGRESO REAL impulsado por el proceso principal de Electron ----
+    // El main process (electron.js) va realizando tareas reales de
+    // inicialización/instalación (crear carpetas de datos, preparar la app, etc.)
+    // y reporta el avance real via IPC. Si por algún motivo no llega ninguna
+    // señal (ej. modo navegador de pruebas), se usa un fallback simulado para
+    // que el launcher nunca se quede congelado.
+    function setProgress(percent, label) {
+      progress = Math.max(progress, Math.min(100, percent));
+      progressFill.style.width = progress + '%';
+      progressText.textContent = progress + '%';
+      if (label) developerLine.textContent = '⚡ ' + label + ' ⚡';
+      if (progress >= 100) {
+        phaseBadge.textContent = '✔ LISTO';
+        phaseBadge.style.color = '#4caf50';
+        phaseBadge.style.borderColor = '#4caf50';
+      }
+    }
+    window.__setLauncherProgress = setProgress;
+
+    if (window.launcherApi && typeof window.launcherApi.onProgress === 'function') {
+      window.launcherApi.onProgress((percent, label) => setProgress(percent, label));
+    } else {
+      // Fallback: simulación local si no hay puente IPC disponible.
+      let fake = 0;
+      const fallbackInterval = setInterval(() => {
+        fake += 2;
+        setProgress(fake, 'Cargando');
+        if (fake >= 100) clearInterval(fallbackInterval);
+      }, 80);
+    }
+
+    window.addEventListener('beforeunload', () => {
+      if (animationFrame) cancelAnimationFrame(animationFrame);
+    });
+  })();
+</script>
+
+</body>
+</html>
