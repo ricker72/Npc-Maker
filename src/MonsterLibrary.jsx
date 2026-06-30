@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { parseMonsterLuaFull } from './monsterLuaGenerator';
 import { buildOutfitImageUrl } from './luaGenerator';
 import { DEFAULT_MONSTER } from './data/monsterConstants';
@@ -11,13 +11,17 @@ const CreatureCard = ({ creature, onLoad }) => {
     [creature.lookType]
   );
 
+  useEffect(() => {
+    setImgError(false);
+  }, [imgUrl]);
+
   return (
     <div className="creature-card">
-      <div className="creature-card-sprite">
+      <div className="creature-card-sprite-lg">
         {!imgError ? (
-          <img src={imgUrl} alt={creature.name} onError={() => setImgError(true)} className="character-sprite-sm" />
+          <img src={imgUrl} alt={creature.name} onError={() => setImgError(true)} className="character-sprite-lg" />
         ) : (
-          <span className="sprite-fallback-icon-sm">👤</span>
+          <span className="sprite-fallback-icon-lg">👤</span>
         )}
       </div>
       <div className="creature-card-info">
@@ -32,8 +36,8 @@ const CreatureCard = ({ creature, onLoad }) => {
         </div>
         {creature.source && <div className="creature-card-source">Fuente: {creature.source}</div>}
         {creature.fileName && <div className="creature-card-source">Archivo: {creature.fileName}</div>}
+        <button className="btn btn-gold-sm" onClick={() => onLoad(creature)}>✏️ Editar</button>
       </div>
-      <button className="btn btn-gold-sm" onClick={() => onLoad(creature)}>✏️ Editar</button>
     </div>
   );
 };

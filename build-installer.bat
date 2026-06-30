@@ -32,7 +32,7 @@ if %errorlevel% neq 0 (
 )
 
 echo.
-echo [3/3] Generando instalador .exe optimizado...
+echo [3/3] Generando instaladores .exe para Windows x64 y x86...
 call npx electron-builder --win
 if %errorlevel% neq 0 (
     echo [ERROR] Fallo la generacion del instalador.
@@ -42,8 +42,11 @@ if %errorlevel% neq 0 (
 
 echo.
 echo ============================================
-echo   LISTO! Instalador generado en la carpeta:
-echo   dist\
+echo   LISTO! Se generaron 4 archivos en dist\:
+echo     - NPC-Maker-Pro-Setup-x64.exe      (instalador, PCs 64-bit)
+echo     - NPC-Maker-Pro-Setup-ia32.exe     (instalador, PCs 32-bit)
+echo     - NPC-Maker-Pro-Portable-x64.exe   (portable, PCs 64-bit)
+echo     - NPC-Maker-Pro-Portable-ia32.exe  (portable, PCs 32-bit)
 echo ============================================
 echo.
 explorer dist

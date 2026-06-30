@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { callAI, extractLuaCode } from './aiClient';
 import { DEFAULT_AI_ENDPOINT, DEFAULT_AI_MODEL } from './secureConfig';
 import { CRYSTAL_SERVER_SYSTEM_PROMPT, SCRIPT_TYPES } from './crystalServerKnowledge';
@@ -40,6 +40,10 @@ const NpcContextPanel = ({ npc }) => {
   const [imgError, setImgError] = useState(false);
   const imgUrl = useMemo(() => buildOutfitImageUrl(npc.outfit), [npc.outfit]);
 
+  useEffect(() => {
+    setImgError(false);
+  }, [imgUrl]);
+
   const colorOf = (id) => colorsData.find((c) => c.id === id) || colorsData[0];
 
   const hasShop = npc.shop?.items?.length > 0;
@@ -53,17 +57,17 @@ const NpcContextPanel = ({ npc }) => {
       </div>
 
       <div className="npc-context-body">
-        <div className="npc-context-sprite">
+        <div className="npc-context-sprite-lg">
           {!imgError ? (
             <img
               src={imgUrl}
               alt="preview"
-              className="character-sprite-sm"
+              className="character-sprite-lg"
               onError={() => setImgError(true)}
               onLoad={() => setImgError(false)}
             />
           ) : (
-            <span className="sprite-fallback-icon-sm">👤</span>
+            <span className="sprite-fallback-icon-lg">👤</span>
           )}
         </div>
 

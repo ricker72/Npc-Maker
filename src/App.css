@@ -786,15 +786,16 @@ body {
 .npc-context-title { font-size: 13px; font-weight: 700; color: var(--gold-light); }
 .npc-context-hint { font-size: 11px; color: var(--text-secondary); }
 
-.npc-context-body { display: flex; gap: 14px; align-items: flex-start; }
+.npc-context-body { display: flex; flex-direction: column; gap: 14px; align-items: stretch; }
 
-.npc-context-sprite {
-  width: 70px;
-  height: 70px;
-  flex-shrink: 0;
-  background: radial-gradient(circle, rgba(212, 175, 55, 0.1), rgba(0,0,0,0.4));
+.npc-context-sprite-lg {
+  width: 400px;
+  height: 400px;
+  max-width: 100%;
+  align-self: center;
+  background: radial-gradient(circle, rgba(212, 175, 55, 0.12), rgba(0,0,0,0.45));
   border: 1px solid var(--border-color);
-  border-radius: 8px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -902,37 +903,42 @@ body {
 
 .creature-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+  gap: 16px;
 }
 
 .creature-card {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  flex-direction: column;
   background: rgba(26, 26, 26, 0.6);
   border: 1px solid var(--border-color);
   border-radius: 8px;
-  padding: 10px;
+  padding: 14px;
   transition: all 0.2s ease;
 }
 
 .creature-card:hover { border-color: var(--primary-gold); }
 
-.creature-card-sprite {
-  width: 50px;
-  height: 50px;
-  flex-shrink: 0;
-  background: radial-gradient(circle, rgba(212, 175, 55, 0.1), rgba(0,0,0,0.4));
-  border-radius: 6px;
+.creature-card-sprite-lg {
+  width: 400px;
+  height: 400px;
+  max-width: 100%;
+  align-self: center;
+  background: radial-gradient(circle, rgba(212, 175, 55, 0.12), rgba(0,0,0,0.45));
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  margin-bottom: 14px;
 }
 
-.creature-card-info { flex: 1; min-width: 0; }
-.creature-card-name { font-weight: 700; font-size: 13px; color: var(--gold-light); }
+.character-sprite-lg { image-rendering: pixelated; transform: scale(8); filter: drop-shadow(0 6px 10px rgba(0,0,0,0.6)); }
+.sprite-fallback-icon-lg { font-size: 80px; opacity: 0.4; }
+
+.creature-card-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.creature-card-name { font-weight: 700; font-size: 15px; color: var(--gold-light); }
 .creature-card-stats { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
 .creature-card-source { font-size: 10px; color: var(--text-secondary); margin-top: 2px; }
 

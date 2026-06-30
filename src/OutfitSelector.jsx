@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import outfitsData from './data/outfits.json';
 import colorsData from './data/colors.json';
 import mountsData from './data/mounts.json';
@@ -32,6 +32,14 @@ const OutfitSelector = ({ outfit, onChange }) => {
 
   const imgUrl = useMemo(() => buildOutfitImageUrl(outfit), [outfit]);
 
+  // Cada vez que cambia la URL (cambió el outfit), se vuelve a intentar
+  // cargar la imagen. Sin esto, una vez que falla una carga, el <img> queda
+  // desmontado para siempre y nunca se vuelve a probar, aunque el looktype
+  // cambie después a uno válido (ej. bajar a 0 y luego subir de nuevo).
+  useEffect(() => {
+    setImgError(false);
+  }, [imgUrl]);
+
   const handleGenderChange = (newGender) => {
     setGender(newGender);
 
@@ -54,7 +62,8 @@ const OutfitSelector = ({ outfit, onChange }) => {
 
   const handleLookTypeInput = (value) => {
     const num = parseInt(value, 10);
-    onChange({ ...outfit, lookType: Number.isNaN(num) ? 0 : num });
+    const safeNum = Number.isNaN(num) ? 0 : Math.max(0, num);
+    onChange({ ...outfit, lookType: safeNum });
   };
 
   const handleSelectOutfit = (lookType) => {
