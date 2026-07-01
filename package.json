@@ -1,6 +1,6 @@
 {
   "name": "npc-maker-pro",
-  "version": "2.6.1",
+  "version": "2.6.3",
   "description": "NPC Maker Pro - Crea y gestiona NPCs para servidores OpenTibia/Canary/CrystalServer",
   "main": "public/electron.js",
   "homepage": "./",
@@ -12,9 +12,9 @@
     "react-build": "react-scripts build",
     "electron-start": "wait-on http://localhost:3000 && electron .",
     "electron-dev": "concurrently \"npm run react-start\" \"wait-on http://localhost:3000 && electron .\"",
-    "electron-build": "npm run react-build && electron-builder",
+    "electron-build": "npm run react-build && electron-builder --publish never",
     "build": "npm run react-build && npm run electron-build",
-    "build:win": "npm run react-build && electron-builder --win",
+    "build:win": "npm run react-build && electron-builder --win --publish never",
     "start": "react-scripts start"
   },
   "dependencies": {},
@@ -29,6 +29,7 @@
   },
   "build": {
     "extends": null,
+    "publish": null,
     "appId": "com.opentibia.npcmakerpro",
     "productName": "NPC Maker Pro",
     "asar": true,

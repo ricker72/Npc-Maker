@@ -13,6 +13,12 @@ on:
 jobs:
   build-windows:
     runs-on: windows-latest
+    env:
+      # No firmamos la app (no hay certificado de code signing). Esto evita
+      # que electron-builder intente descargar winCodeSign innecesariamente
+      # (paquete de herramientas de firma que incluye binarios de macOS y
+      # puede fallar en algunas máquinas por permisos de symlink).
+      CSC_IDENTITY_AUTO_DISCOVERY: false
 
     steps:
       - name: Checkout código

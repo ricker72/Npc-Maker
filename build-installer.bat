@@ -33,9 +33,26 @@ if %errorlevel% neq 0 (
 
 echo.
 echo [3/3] Generando instaladores .exe para Windows x64 y x86...
-call npx electron-builder --win
+rem No firmamos la app (no tenemos certificado), asi que le decimos a
+rem electron-builder que NO intente descargar herramientas de firma de
+rem codigo (winCodeSign). Sin esto, en algunas PCs Windows falla con un
+rem error de "symbolic link" porque esa cuenta no tiene el privilegio para
+rem crear symlinks al extraer ese paquete (incluye binarios de macOS).
+set CSC_IDENTITY_AUTO_DISCOVERY=false
+call npx electron-builder --win --publish never
 if %errorlevel% neq 0 (
     echo [ERROR] Fallo la generacion del instalador.
+    echo.
+    echo Si el error menciona "winCodeSign" o "symbolic link", es un problema
+    echo conocido de Windows, no de esta app. Soluciones (cualquiera de las 2):
+    echo.
+    echo   OPCION A - Ejecutar este .bat como Administrador:
+    echo     Clic derecho en build-installer.bat -^> "Ejecutar como administrador"
+    echo.
+    echo   OPCION B - Activar el Modo de Desarrollador de Windows (una sola vez):
+    echo     Configuracion -^> Privacidad y seguridad -^> Para desarrolladores
+    echo     -^> Modo de desarrollador: Activado. Luego reintenta sin admin.
+    echo.
     pause
     exit /b 1
 )
