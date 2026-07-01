@@ -3,7 +3,7 @@
 ---
 
 <div align="center">
-  <img src="https://media.giphy.com/media/xT9IgzoKnwFNmISR8I/giphy.gif" alt="Partículas animadas" width="100%" style="border-radius: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.6);"/>
+  <img src="https://media.giphy.com/media/xT9IgzoKnwFNmISR8I/giphy.gif" alt="Partículas animadas" width="50%" style="border-radius: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.6);"/>
 </div>
 
 ---
@@ -30,6 +30,8 @@
 - **Constructor de Tienda** – Lista de ítems arrastrables con animaciones de rebote.
 - **Exportación / Importación** – Un clic para exportar a Lua o JSON, con barra de progreso animada.
 - **Integración con el Agente IA RME** – Generación automática de mapas y misiones mediante IA.
+- **Script Creator** - Genera scripts solo escribes un prompt y el programa hara el resto.
+- **Monster Editor** - ayuda a editar, crear nuevos monster para tus proyectos.
 
 ---
 
@@ -44,9 +46,10 @@
 
 ## 📦 Instalación
 
-1. Descarga el instalador **NPC Maker Pro Setup 2.0.0.exe** desde la [página de releases](https://github.com/ricker72/npc-maker/releases).
+1. Descarga el instalador **NPC Maker Pro Setup 2.5.exe** desde la [página de releases](https://github.com/ricker72/npc-maker/releases).
 2. Ejecuta el instalador y **espera a que finalice** (verás una barra de progreso con partículas animadas).
 3. Una vez completado, inicia **NPC Maker Pro** desde el menú de inicio o el acceso directo del escritorio.
+4. Se agrego una version portable y compatibilidad para x86 para odrdenadores de pocos recursos
 
 > 🛠️ No necesitas comandos adicionales: el instalador gestiona todas las dependencias automáticamente.
 
