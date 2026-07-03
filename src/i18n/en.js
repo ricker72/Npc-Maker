@@ -289,6 +289,7 @@ export default {
     searchPlaceholder: 'Search creature...',
     yourImported: 'Your imported files',
     curatedSet: 'Quick reference set',
+    curatedDisclaimer: '⚠️ Approximate reference values (not verified against a live source) — for exact data, import your own .lua files from your server.',
     editButton: 'Edit',
     lootCount: 'loot',
     attacksCount: 'attacks',

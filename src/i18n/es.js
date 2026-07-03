@@ -289,6 +289,7 @@ export default {
     searchPlaceholder: 'Buscar criatura...',
     yourImported: 'Tus archivos importados',
     curatedSet: 'Set de referencia rápida',
+    curatedDisclaimer: '⚠️ Valores de referencia aproximados (no verificados contra una fuente en vivo) — para datos exactos, importa tus propios archivos .lua de tu servidor.',
     editButton: 'Editar',
     lootCount: 'botín',
     attacksCount: 'ataques',

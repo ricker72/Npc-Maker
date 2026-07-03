@@ -176,6 +176,7 @@ const MonsterLibrary = ({ onLoadMonster }) => {
 
       <div className="section">
         <h3 className="section-title">{t('monsterLibrary.curatedSet')}</h3>
+        <p className="section-hint">{t('monsterLibrary.curatedDisclaimer')}</p>
         <div className="bestiary-grid">
           {filteredCurated.map((c) => (
             <BestiaryCard key={c.name} creature={c} onLoad={handleLoadCurated} />
