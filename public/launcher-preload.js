@@ -5,5 +5,6 @@ contextBridge.exposeInMainWorld('launcherApi', {
     ipcRenderer.on('setup-progress', (_event, percent, label) => {
       callback(percent, label);
     });
-  }
+  },
+  getAppVersion: () => ipcRenderer.invoke('get-app-version')
 });

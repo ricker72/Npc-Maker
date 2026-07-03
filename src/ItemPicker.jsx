@@ -1,7 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import itemsData from './data/items.json';
+import { useTranslation } from './i18n/LanguageContext';
 
-const ItemPicker = ({ onAdd, label = 'Agregar item' }) => {
+const ItemPicker = ({ onAdd, label }) => {
+  const { t } = useTranslation();
+  const buttonLabel = label || t('shop.addToShop');
+
   const [search, setSearch] = useState('');
   const [selectedItem, setSelectedItem] = useState(null);
   const [buyPrice, setBuyPrice] = useState('');
@@ -27,11 +31,11 @@ const ItemPicker = ({ onAdd, label = 'Agregar item' }) => {
 
   const handleAdd = () => {
     if (!selectedItem) {
-      setNotice({ type: 'error', text: '⚠️ Selecciona un item válido de la lista de sugerencias.' });
+      setNotice({ type: 'error', text: '⚠️ ' + t('shop.selectValidItem') });
       return;
     }
     if (!buyPrice && !sellPrice) {
-      setNotice({ type: 'error', text: '⚠️ Ingresa al menos un precio de compra o venta.' });
+      setNotice({ type: 'error', text: '⚠️ ' + t('shop.enterPrice') });
       return;
     }
     onAdd({
@@ -46,7 +50,7 @@ const ItemPicker = ({ onAdd, label = 'Agregar item' }) => {
     setBuyPrice('');
     setSellPrice('');
     setCount(1);
-    setNotice({ type: 'success', text: '✅ Item agregado.' });
+    setNotice({ type: 'success', text: '✅ ' + t('shop.itemAdded') });
     setTimeout(() => setNotice(null), 1800);
   };
 
@@ -56,7 +60,7 @@ const ItemPicker = ({ onAdd, label = 'Agregar item' }) => {
         <input
           type="text"
           className="form-input"
-          placeholder="🔍 Buscar item por nombre o ID..."
+          placeholder={`🔍 ${t('shop.searchPlaceholder')}`}
           value={search}
           onChange={(e) => {
             setSearch(e.target.value);
@@ -83,27 +87,27 @@ const ItemPicker = ({ onAdd, label = 'Agregar item' }) => {
 
       <div className="item-picker-fields">
         <div className="form-group">
-          <label>Buy Price (NPC vende)</label>
+          <label>{t('shop.buyPrice')}</label>
           <input
             type="number"
             className="form-input"
             value={buyPrice}
             onChange={(e) => setBuyPrice(e.target.value)}
-            placeholder="ej: 100"
+            placeholder="e.g: 100"
           />
         </div>
         <div className="form-group">
-          <label>Sell Price (NPC compra)</label>
+          <label>{t('shop.sellPrice')}</label>
           <input
             type="number"
             className="form-input"
             value={sellPrice}
             onChange={(e) => setSellPrice(e.target.value)}
-            placeholder="ej: 50"
+            placeholder="e.g: 50"
           />
         </div>
         <div className="form-group">
-          <label>Count</label>
+          <label>{t('shop.count')}</label>
           <input
             type="number"
             className="form-input"
@@ -112,7 +116,7 @@ const ItemPicker = ({ onAdd, label = 'Agregar item' }) => {
             onChange={(e) => setCount(parseInt(e.target.value) || 1)}
           />
         </div>
-        <button className="btn btn-gold-sm" onClick={handleAdd}>➕ {label}</button>
+        <button className="btn btn-gold-sm" onClick={handleAdd}>➕ {buttonLabel}</button>
       </div>
       {notice && <div className={`inline-notice ${notice.type}`}>{notice.text}</div>}
     </div>

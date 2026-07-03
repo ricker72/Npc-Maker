@@ -10,19 +10,22 @@ import {
   CONDITION_TYPES,
   COMMON_SHOOT_EFFECTS
 } from './data/monsterConstants';
-
-const SUB_TABS = [
-  { key: 'basic', icon: '📋', label: 'Basic Info' },
-  { key: 'appearance', icon: '👕', label: 'Appearance' },
-  { key: 'combat', icon: '⚔️', label: 'Combat' },
-  { key: 'loot', icon: '💰', label: 'Loot' },
-  { key: 'bestiary', icon: '📖', label: 'Bestiary' },
-  { key: 'voices', icon: '🗣️', label: 'Voices & Summons' },
-  { key: 'preview', icon: '👁️', label: 'Preview Lua' },
-  { key: 'library', icon: '📚', label: 'Library' }
-];
+import { useTranslation } from './i18n/LanguageContext';
 
 const MonsterEditor = () => {
+  const { t } = useTranslation();
+
+  const SUB_TABS = [
+    { key: 'basic', icon: '📋', label: t('monsterEditor.tabBasic') },
+    { key: 'appearance', icon: '👕', label: t('monsterEditor.tabAppearance') },
+    { key: 'combat', icon: '⚔️', label: t('monsterEditor.tabCombat') },
+    { key: 'loot', icon: '💰', label: t('monsterEditor.tabLoot') },
+    { key: 'bestiary', icon: '📖', label: t('monsterEditor.tabBestiary') },
+    { key: 'voices', icon: '🗣️', label: t('monsterEditor.tabVoicesSummons') },
+    { key: 'preview', icon: '👁️', label: t('monsterEditor.tabPreview') },
+    { key: 'library', icon: '📚', label: t('monsterEditor.tabLibrary') }
+  ];
+
   const [monster, setMonster] = useState(DEFAULT_MONSTER);
   const [subTab, setSubTab] = useState('basic');
 
@@ -116,19 +119,19 @@ const MonsterEditor = () => {
     <div className="monster-editor">
       <div className="monster-editor-header">
         <div className="monster-sub-tabs">
-          {SUB_TABS.map((t) => (
+          {SUB_TABS.map((tab) => (
             <button
-              key={t.key}
-              className={`sub-panel-tab ${subTab === t.key ? 'active' : ''}`}
-              onClick={() => setSubTab(t.key)}
+              key={tab.key}
+              className={`sub-panel-tab ${subTab === tab.key ? 'active' : ''}`}
+              onClick={() => setSubTab(tab.key)}
             >
-              {t.icon} {t.label}
+              {tab.icon} {tab.label}
             </button>
           ))}
         </div>
         <div className="monster-editor-actions">
-          <button className="btn btn-gold-sm" onClick={exportLua}>📥 Export Lua</button>
-          <button className="btn btn-gold-sm" onClick={copyLua}>📋 Copiar</button>
+          <button className="btn btn-gold-sm" onClick={exportLua}>📥 {t('header.exportLua')}</button>
+          <button className="btn btn-gold-sm" onClick={copyLua}>📋 {t('common.copy')}</button>
         </div>
       </div>
 
@@ -137,30 +140,30 @@ const MonsterEditor = () => {
 
       <div style={{ display: subTab === 'basic' ? 'block' : 'none' }}>
         <div className="section">
-          <h3 className="section-title">Información Básica</h3>
+          <h3 className="section-title">{t('monsterEditor.basicTitle')}</h3>
           <div className="form-grid">
             <div className="form-group">
-              <label>Nombre del monstruo</label>
+              <label>{t('monsterEditor.monsterName')}</label>
               <input
                 type="text"
                 className="form-input"
                 value={monster.name}
                 onChange={(e) => update({ name: e.target.value })}
-                placeholder="ej: Rotworm"
+                placeholder={t('monsterEditor.monsterNamePlaceholder')}
               />
             </div>
             <div className="form-group">
-              <label>Descripción (corpse look text)</label>
+              <label>{t('monsterEditor.description')}</label>
               <input
                 type="text"
                 className="form-input"
                 value={monster.description}
                 onChange={(e) => update({ description: e.target.value })}
-                placeholder="ej: a rotworm"
+                placeholder={t('monsterEditor.descriptionPlaceholder')}
               />
             </div>
             <div className="form-group">
-              <label>Experience</label>
+              <label>{t('monsterEditor.experience')}</label>
               <input
                 type="number"
                 className="form-input"
@@ -169,7 +172,7 @@ const MonsterEditor = () => {
               />
             </div>
             <div className="form-group">
-              <label>Race ID</label>
+              <label>{t('monsterEditor.raceId')}</label>
               <input
                 type="number"
                 className="form-input"
@@ -181,10 +184,10 @@ const MonsterEditor = () => {
         </div>
 
         <div className="section">
-          <h3 className="section-title">Salud y Movimiento</h3>
+          <h3 className="section-title">{t('monsterEditor.healthMovementTitle')}</h3>
           <div className="form-grid">
             <div className="form-group">
-              <label>Health</label>
+              <label>{t('monsterEditor.health')}</label>
               <input
                 type="number"
                 className="form-input"
@@ -193,7 +196,7 @@ const MonsterEditor = () => {
               />
             </div>
             <div className="form-group">
-              <label>Max Health</label>
+              <label>{t('monsterEditor.maxHealth')}</label>
               <input
                 type="number"
                 className="form-input"
@@ -202,7 +205,7 @@ const MonsterEditor = () => {
               />
             </div>
             <div className="form-group">
-              <label>Speed</label>
+              <label>{t('monsterEditor.speed')}</label>
               <input
                 type="number"
                 className="form-input"
@@ -211,13 +214,13 @@ const MonsterEditor = () => {
               />
             </div>
             <div className="form-group">
-              <label>Race (sangre/decay)</label>
+              <label>{t('monsterEditor.raceBloodDecay')}</label>
               <select className="form-input" value={monster.race} onChange={(e) => update({ race: e.target.value })}>
                 {RACE_TYPES.map((r) => <option key={r} value={r}>{r}</option>)}
               </select>
             </div>
             <div className="form-group">
-              <label>Corpse (item ID)</label>
+              <label>{t('monsterEditor.corpse')}</label>
               <input
                 type="number"
                 className="form-input"
@@ -226,7 +229,7 @@ const MonsterEditor = () => {
               />
             </div>
             <div className="form-group">
-              <label>Mana Cost (convencer)</label>
+              <label>{t('monsterEditor.manaCost')}</label>
               <input
                 type="number"
                 className="form-input"
@@ -238,7 +241,7 @@ const MonsterEditor = () => {
         </div>
 
         <div className="section">
-          <h3 className="section-title">Flags</h3>
+          <h3 className="section-title">{t('monsterEditor.flagsTitle')}</h3>
           <div className="flags-grid">
             {Object.keys(monster.flags).map((key) => {
               const value = monster.flags[key];
@@ -274,21 +277,18 @@ const MonsterEditor = () => {
 
       <div style={{ display: subTab === 'appearance' ? 'block' : 'none' }}>
         <div className="section">
-          <h3 className="section-title">Apariencia del Monstruo</h3>
-          <p className="section-hint">
-            Mismo sistema visual de looktype/colores/addons/mounts que el de NPCs — totalmente
-            reutilizado para garantizar consistencia.
-          </p>
+          <h3 className="section-title">{t('appearance.monsterTitle')}</h3>
+          <p className="section-hint">{t('appearance.reuseHint')}</p>
           <OutfitSelector outfit={monster.outfit} onChange={(outfit) => update({ outfit })} />
         </div>
       </div>
 
       <div style={{ display: subTab === 'combat' ? 'block' : 'none' }}>
         <div className="section">
-          <h3 className="section-title">Defensas</h3>
+          <h3 className="section-title">{t('monsterEditor.defensesTitle')}</h3>
           <div className="form-grid">
             <div className="form-group">
-              <label>Defense</label>
+              <label>{t('monsterEditor.defense')}</label>
               <input
                 type="number"
                 className="form-input"
@@ -297,7 +297,7 @@ const MonsterEditor = () => {
               />
             </div>
             <div className="form-group">
-              <label>Armor</label>
+              <label>{t('monsterEditor.armor')}</label>
               <input
                 type="number"
                 className="form-input"
@@ -306,7 +306,7 @@ const MonsterEditor = () => {
               />
             </div>
             <div className="form-group">
-              <label>Mitigation</label>
+              <label>{t('monsterEditor.mitigation')}</label>
               <input
                 type="number"
                 step="0.01"
@@ -320,22 +320,19 @@ const MonsterEditor = () => {
 
         <div className="section">
           <div className="section-header">
-            <h3 className="section-title">Habilidades Defensivas (auto-buffs)</h3>
-            <button className="btn btn-gold-sm" onClick={addDefenseAbility}>➕ Agregar</button>
+            <h3 className="section-title">{t('monsterEditor.defenseAbilitiesTitle')}</h3>
+            <button className="btn btn-gold-sm" onClick={addDefenseAbility}>➕ {t('common.add')}</button>
           </div>
-          <p className="section-hint">
-            Hechizos que el monstruo se lanza a sí mismo (ej. aumentar su velocidad). Viven dentro
-            de <code>monster.defenses</code> en el Lua real, junto a defense/armor/mitigation.
-          </p>
+          <p className="section-hint">{t('monsterEditor.defenseAbilitiesHint')}</p>
           <div className="items-list">
             {(monster.defenseAbilities || []).length === 0 ? (
-              <div className="empty-state-sm">Sin habilidades defensivas configuradas</div>
+              <div className="empty-state-sm">{t('monsterEditor.noDefenseAbilities')}</div>
             ) : (
               monster.defenseAbilities.map((d) => (
                 <div key={d.uid} className="item-card">
                   <div className="item-grid">
                     <div className="form-group">
-                      <label>Nombre</label>
+                      <label>{t('monsterEditor.name')}</label>
                       <input
                         type="text"
                         className="form-input"
@@ -344,7 +341,7 @@ const MonsterEditor = () => {
                       />
                     </div>
                     <div className="form-group">
-                      <label>Interval</label>
+                      <label>{t('monsterEditor.interval')}</label>
                       <input
                         type="number"
                         className="form-input"
@@ -353,7 +350,7 @@ const MonsterEditor = () => {
                       />
                     </div>
                     <div className="form-group">
-                      <label>Chance</label>
+                      <label>{t('monsterEditor.chance')}</label>
                       <input
                         type="number"
                         className="form-input"
@@ -362,7 +359,7 @@ const MonsterEditor = () => {
                       />
                     </div>
                     <div className="form-group">
-                      <label>Speed Change</label>
+                      <label>{t('monsterEditor.speedChange')}</label>
                       <input
                         type="number"
                         className="form-input"
@@ -371,7 +368,7 @@ const MonsterEditor = () => {
                       />
                     </div>
                     <div className="form-group">
-                      <label>Duration (ms)</label>
+                      <label>{t('monsterEditor.duration')}</label>
                       <input
                         type="number"
                         className="form-input"
@@ -380,13 +377,13 @@ const MonsterEditor = () => {
                       />
                     </div>
                     <div className="form-group">
-                      <label>Effect</label>
+                      <label>{t('monsterEditor.effect')}</label>
                       <select
                         className="form-input"
                         value={d.effect || ''}
                         onChange={(e) => updateDefenseAbility(d.uid, { effect: e.target.value })}
                       >
-                        <option value="">(ninguno)</option>
+                        <option value="">{t('monsterEditor.noneOption')}</option>
                         {COMMON_SHOOT_EFFECTS.map((fx) => <option key={fx} value={fx}>{fx.replace('CONST_ME_', '')}</option>)}
                       </select>
                     </div>
@@ -399,8 +396,8 @@ const MonsterEditor = () => {
         </div>
 
         <div className="section">
-          <h3 className="section-title">Elementos (resistencias %)</h3>
-          <p className="section-hint">Positivo = más daño recibido. Negativo = resistencia. -100 = inmune. 100 = debilidad total.</p>
+          <h3 className="section-title">{t('monsterEditor.elementsTitle')}</h3>
+          <p className="section-hint">{t('monsterEditor.elementsHint')}</p>
           <div className="elements-grid">
             {monster.elements.map((e) => (
               <div key={e.type} className="form-group">
@@ -417,7 +414,7 @@ const MonsterEditor = () => {
         </div>
 
         <div className="section">
-          <h3 className="section-title">Inmunidades a condiciones</h3>
+          <h3 className="section-title">{t('monsterEditor.immunitiesTitle')}</h3>
           <div className="addon-checkboxes immunities-checkboxes">
             {monster.immunities.map((i) => (
               <label key={i.type} className="checkbox-label">
@@ -434,18 +431,18 @@ const MonsterEditor = () => {
 
         <div className="section">
           <div className="section-header">
-            <h3 className="section-title">Ataques</h3>
-            <button className="btn btn-gold-sm" onClick={addAttack}>➕ Agregar Ataque</button>
+            <h3 className="section-title">{t('monsterEditor.attacksTitle')}</h3>
+            <button className="btn btn-gold-sm" onClick={addAttack}>➕ {t('monsterEditor.addAttack')}</button>
           </div>
           <div className="items-list">
             {monster.attacks.length === 0 ? (
-              <div className="empty-state-sm">Sin ataques configurados (el monstruo no haría daño)</div>
+              <div className="empty-state-sm">{t('monsterEditor.noAttacks')}</div>
             ) : (
               monster.attacks.map((a) => (
                 <div key={a.uid} className="item-card">
                   <div className="item-grid attack-grid">
                     <div className="form-group">
-                      <label>Nombre</label>
+                      <label>{t('monsterEditor.attackName')}</label>
                       <input
                         type="text"
                         className="form-input"
@@ -455,7 +452,7 @@ const MonsterEditor = () => {
                       />
                     </div>
                     <div className="form-group">
-                      <label>Interval</label>
+                      <label>{t('monsterEditor.interval')}</label>
                       <input
                         type="number"
                         className="form-input"
@@ -464,7 +461,7 @@ const MonsterEditor = () => {
                       />
                     </div>
                     <div className="form-group">
-                      <label>Chance</label>
+                      <label>{t('monsterEditor.chance')}</label>
                       <input
                         type="number"
                         className="form-input"
@@ -473,7 +470,7 @@ const MonsterEditor = () => {
                       />
                     </div>
                     <div className="form-group">
-                      <label>Min Damage</label>
+                      <label>{t('monsterEditor.minDamage')}</label>
                       <input
                         type="number"
                         className="form-input"
@@ -482,7 +479,7 @@ const MonsterEditor = () => {
                       />
                     </div>
                     <div className="form-group">
-                      <label>Max Damage</label>
+                      <label>{t('monsterEditor.maxDamage')}</label>
                       <input
                         type="number"
                         className="form-input"
@@ -491,7 +488,7 @@ const MonsterEditor = () => {
                       />
                     </div>
                     <div className="form-group">
-                      <label>Range</label>
+                      <label>{t('monsterEditor.range')}</label>
                       <input
                         type="number"
                         className="form-input"
@@ -516,7 +513,7 @@ const MonsterEditor = () => {
                           })
                         }
                       />
-                      Daño continuo (poison/fire/energy...)
+                      {t('monsterEditor.dotToggle')}
                     </label>
                     {a.condition && (
                       <div className="attack-condition-fields">
@@ -530,14 +527,14 @@ const MonsterEditor = () => {
                         <input
                           type="number"
                           className="form-input"
-                          placeholder="Total Damage"
+                          placeholder={t('monsterEditor.totalDamage')}
                           value={a.condition.totalDamage}
                           onChange={(e) => updateAttack(a.uid, { condition: { ...a.condition, totalDamage: parseInt(e.target.value) || 0 } })}
                         />
                         <input
                           type="number"
                           className="form-input"
-                          placeholder="Interval (ms)"
+                          placeholder={t('monsterEditor.intervalMs')}
                           value={a.condition.interval}
                           onChange={(e) => updateAttack(a.uid, { condition: { ...a.condition, interval: parseInt(e.target.value) || 0 } })}
                         />
@@ -553,21 +550,21 @@ const MonsterEditor = () => {
                         checked={!!a.speedChange}
                         onChange={(e) => updateAttack(a.uid, { speedChange: e.target.checked ? 200 : 0, duration: e.target.checked ? (a.duration || 5000) : 0 })}
                       />
-                      Paralyze / cambio de velocidad
+                      {t('monsterEditor.paralyzeToggle')}
                     </label>
                     {!!a.speedChange && (
                       <div className="attack-condition-fields">
                         <input
                           type="number"
                           className="form-input"
-                          placeholder="Speed Change"
+                          placeholder={t('monsterEditor.speedChange')}
                           value={a.speedChange}
                           onChange={(e) => updateAttack(a.uid, { speedChange: parseInt(e.target.value) || 0 })}
                         />
                         <input
                           type="number"
                           className="form-input"
-                          placeholder="Duration (ms)"
+                          placeholder={t('monsterEditor.duration')}
                           value={a.duration || 0}
                           onChange={(e) => updateAttack(a.uid, { duration: parseInt(e.target.value) || 0 })}
                         />
@@ -576,7 +573,7 @@ const MonsterEditor = () => {
                           value={a.effect || ''}
                           onChange={(e) => updateAttack(a.uid, { effect: e.target.value })}
                         >
-                          <option value="">(sin efecto visual)</option>
+                          <option value="">{t('monsterEditor.noEffect')}</option>
                           {COMMON_SHOOT_EFFECTS.map((fx) => <option key={fx} value={fx}>{fx.replace('CONST_ME_', '')}</option>)}
                         </select>
                       </div>
@@ -595,29 +592,29 @@ const MonsterEditor = () => {
       <div style={{ display: subTab === 'loot' ? 'block' : 'none' }}>
         <div className="section">
           <div className="section-header">
-            <h3 className="section-title">Loot Table</h3>
-            <button className="btn btn-gold-sm" onClick={addLootItem}>➕ Agregar Item</button>
+            <h3 className="section-title">{t('monsterEditor.lootTitle')}</h3>
+            <button className="btn btn-gold-sm" onClick={addLootItem}>➕ {t('monsterEditor.addItem')}</button>
           </div>
-          <p className="section-hint">Chance va de 1 a 100000 (100000 = 100% de probabilidad).</p>
+          <p className="section-hint">{t('monsterEditor.lootHint')}</p>
           <div className="items-list">
             {monster.loot.length === 0 ? (
-              <div className="empty-state-sm">Sin loot configurado</div>
+              <div className="empty-state-sm">{t('monsterEditor.noLoot')}</div>
             ) : (
               monster.loot.map((it) => (
                 <div key={it.uid} className="item-card">
                   <div className="item-grid">
                     <div className="form-group">
-                      <label>Nombre del item</label>
+                      <label>{t('monsterEditor.itemName')}</label>
                       <input
                         type="text"
                         className="form-input"
                         value={it.name}
                         onChange={(e) => updateLootItem(it.uid, { name: e.target.value })}
-                        placeholder="ej: gold coin"
+                        placeholder={t('monsterEditor.itemNamePlaceholder')}
                       />
                     </div>
                     <div className="form-group">
-                      <label>Chance (1-100000)</label>
+                      <label>{t('monsterEditor.chanceRange')}</label>
                       <input
                         type="number"
                         className="form-input"
@@ -626,7 +623,7 @@ const MonsterEditor = () => {
                       />
                     </div>
                     <div className="form-group">
-                      <label>Max Count</label>
+                      <label>{t('monsterEditor.maxCount')}</label>
                       <input
                         type="number"
                         className="form-input"
@@ -645,20 +642,20 @@ const MonsterEditor = () => {
 
       <div style={{ display: subTab === 'bestiary' ? 'block' : 'none' }}>
         <div className="section">
-          <h3 className="section-title">Bestiary</h3>
+          <h3 className="section-title">{t('monsterEditor.bestiaryTitle')}</h3>
           <div className="form-grid">
             <div className="form-group">
-              <label>Class</label>
+              <label>{t('monsterEditor.bestiaryClass')}</label>
               <input
                 type="text"
                 className="form-input"
                 value={monster.bestiary.class}
                 onChange={(e) => updateNested('bestiary', { class: e.target.value })}
-                placeholder="ej: Vermin"
+                placeholder={t('monsterEditor.bestiaryClassPlaceholder')}
               />
             </div>
             <div className="form-group">
-              <label>Race (categoría)</label>
+              <label>{t('monsterEditor.bestiaryRace')}</label>
               <select
                 className="form-input"
                 value={monster.bestiary.race}
@@ -668,7 +665,7 @@ const MonsterEditor = () => {
               </select>
             </div>
             <div className="form-group">
-              <label>Stars (dificultad 1-4)</label>
+              <label>{t('monsterEditor.stars')}</label>
               <input
                 type="number"
                 min="1"
@@ -679,7 +676,7 @@ const MonsterEditor = () => {
               />
             </div>
             <div className="form-group">
-              <label>To Kill</label>
+              <label>{t('monsterEditor.toKill')}</label>
               <input
                 type="number"
                 className="form-input"
@@ -688,7 +685,7 @@ const MonsterEditor = () => {
               />
             </div>
             <div className="form-group">
-              <label>First Unlock</label>
+              <label>{t('monsterEditor.firstUnlock')}</label>
               <input
                 type="number"
                 className="form-input"
@@ -697,7 +694,7 @@ const MonsterEditor = () => {
               />
             </div>
             <div className="form-group">
-              <label>Second Unlock</label>
+              <label>{t('monsterEditor.secondUnlock')}</label>
               <input
                 type="number"
                 className="form-input"
@@ -706,7 +703,7 @@ const MonsterEditor = () => {
               />
             </div>
             <div className="form-group">
-              <label>Charms Points</label>
+              <label>{t('monsterEditor.charmsPoints')}</label>
               <input
                 type="number"
                 className="form-input"
@@ -715,7 +712,7 @@ const MonsterEditor = () => {
               />
             </div>
             <div className="form-group">
-              <label>Occurrence</label>
+              <label>{t('monsterEditor.occurrence')}</label>
               <input
                 type="number"
                 className="form-input"
@@ -725,13 +722,13 @@ const MonsterEditor = () => {
             </div>
           </div>
           <div className="form-group" style={{ marginTop: '12px' }}>
-            <label>Locations</label>
+            <label>{t('monsterEditor.locations')}</label>
             <textarea
               className="form-textarea"
               rows="3"
               value={monster.bestiary.locations}
               onChange={(e) => updateNested('bestiary', { locations: e.target.value })}
-              placeholder="ej: Almost everywhere, like Ancient Temple, Vandura..."
+              placeholder={t('monsterEditor.locationsPlaceholder')}
             />
           </div>
         </div>
@@ -740,12 +737,12 @@ const MonsterEditor = () => {
       <div style={{ display: subTab === 'voices' ? 'block' : 'none' }}>
         <div className="section">
           <div className="section-header">
-            <h3 className="section-title">Voices</h3>
-            <button className="btn btn-gold-sm" onClick={addVoice}>➕ Agregar Voz</button>
+            <h3 className="section-title">{t('monsterEditor.voicesTitle')}</h3>
+            <button className="btn btn-gold-sm" onClick={addVoice}>➕ {t('monsterEditor.addVoice')}</button>
           </div>
           <div className="form-grid">
             <div className="form-group">
-              <label>Interval</label>
+              <label>{t('monsterEditor.interval')}</label>
               <input
                 type="number"
                 className="form-input"
@@ -754,7 +751,7 @@ const MonsterEditor = () => {
               />
             </div>
             <div className="form-group">
-              <label>Chance</label>
+              <label>{t('monsterEditor.chance')}</label>
               <input
                 type="number"
                 className="form-input"
@@ -772,11 +769,11 @@ const MonsterEditor = () => {
                   style={{ flex: 1 }}
                   value={v.text}
                   onChange={(e) => updateVoice(v.uid, { text: e.target.value })}
-                  placeholder="Texto de la voz"
+                  placeholder={t('monsterEditor.voiceTextPlaceholder')}
                 />
                 <label className="checkbox-label">
                   <input type="checkbox" checked={v.yell} onChange={(e) => updateVoice(v.uid, { yell: e.target.checked })} />
-                  Yell
+                  {t('monsterEditor.yell')}
                 </label>
                 <button className="btn btn-danger-sm" onClick={() => removeVoice(v.uid)}>🗑️</button>
               </div>
@@ -786,11 +783,11 @@ const MonsterEditor = () => {
 
         <div className="section">
           <div className="section-header">
-            <h3 className="section-title">Summons</h3>
-            <button className="btn btn-gold-sm" onClick={addSummon}>➕ Agregar Summon</button>
+            <h3 className="section-title">{t('monsterEditor.summonsTitle')}</h3>
+            <button className="btn btn-gold-sm" onClick={addSummon}>➕ {t('monsterEditor.addSummon')}</button>
           </div>
           <div className="form-group">
-            <label>Max Summons</label>
+            <label>{t('monsterEditor.maxSummons')}</label>
             <input
               type="number"
               className="form-input"
@@ -804,7 +801,7 @@ const MonsterEditor = () => {
               <div key={sm.uid} className="item-card">
                 <div className="item-grid">
                   <div className="form-group">
-                    <label>Nombre del monstruo a invocar</label>
+                    <label>{t('monsterEditor.summonNamePlaceholder')}</label>
                     <input
                       type="text"
                       className="form-input"
@@ -813,7 +810,7 @@ const MonsterEditor = () => {
                     />
                   </div>
                   <div className="form-group">
-                    <label>Chance</label>
+                    <label>{t('monsterEditor.chance')}</label>
                     <input
                       type="number"
                       className="form-input"
@@ -822,7 +819,7 @@ const MonsterEditor = () => {
                     />
                   </div>
                   <div className="form-group">
-                    <label>Interval</label>
+                    <label>{t('monsterEditor.interval')}</label>
                     <input
                       type="number"
                       className="form-input"
@@ -831,7 +828,7 @@ const MonsterEditor = () => {
                     />
                   </div>
                   <div className="form-group">
-                    <label>Count</label>
+                    <label>{t('shop.count')}</label>
                     <input
                       type="number"
                       className="form-input"
@@ -850,8 +847,8 @@ const MonsterEditor = () => {
       <div style={{ display: subTab === 'preview' ? 'block' : 'none' }}>
         <div className="section">
           <div className="section-header">
-            <h3 className="section-title">Lua Script Preview</h3>
-            <button className="btn btn-gold-sm" onClick={copyLua}>📋 Copiar</button>
+            <h3 className="section-title">{t('monsterEditor.previewTitle')}</h3>
+            <button className="btn btn-gold-sm" onClick={copyLua}>📋 {t('common.copy')}</button>
           </div>
           <div className="preview-box lua-preview">
             <pre className="lua-code">{luaCode}</pre>

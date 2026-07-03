@@ -7,10 +7,10 @@
 // del servidor mediante "Importar archivos .lua".
 
 export const CURATED_CREATURES = [
-  { name: 'Rat', lookType: 21, health: 20, experience: 5, description: 'a rat', source: 'TibiaWiki (CC-BY-SA)' },
-  { name: 'Rotworm', lookType: 26, health: 65, experience: 40, description: 'a rotworm', source: 'TibiaWiki (CC-BY-SA)' },
-  { name: 'Troll', lookType: 21, health: 90, experience: 23, description: 'a troll', source: 'TibiaWiki (CC-BY-SA)' },
-  { name: 'Dragon', lookType: 39, health: 1000, experience: 700, description: 'a dragon', source: 'TibiaWiki (CC-BY-SA)' },
-  { name: 'Demon', lookType: 35, health: 8200, experience: 6000, description: 'a demon', source: 'TibiaWiki (CC-BY-SA)' },
-  { name: 'Dwarf', lookType: 18, health: 80, experience: 25, description: 'a dwarf', source: 'TibiaWiki (CC-BY-SA)' }
+  { name: 'Rat', lookType: 21, health: 20, experience: 5, description: 'a rat', family: 'Vermin', source: 'TibiaWiki (CC-BY-SA)' },
+  { name: 'Rotworm', lookType: 26, health: 65, experience: 40, description: 'a rotworm', family: 'Vermin', source: 'TibiaWiki (CC-BY-SA)' },
+  { name: 'Troll', lookType: 21, health: 90, experience: 23, description: 'a troll', family: 'Humanoid', source: 'TibiaWiki (CC-BY-SA)' },
+  { name: 'Dragon', lookType: 39, health: 1000, experience: 700, description: 'a dragon', family: 'Dragon', source: 'TibiaWiki (CC-BY-SA)' },
+  { name: 'Demon', lookType: 35, health: 8200, experience: 6000, description: 'a demon', family: 'Demon', source: 'TibiaWiki (CC-BY-SA)' },
+  { name: 'Dwarf', lookType: 18, health: 80, experience: 25, description: 'a dwarf', family: 'Humanoid', source: 'TibiaWiki (CC-BY-SA)' }
 ];

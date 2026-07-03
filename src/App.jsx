@@ -5,6 +5,9 @@ import ItemPicker from './ItemPicker';
 import ScriptCreator from './ScriptCreator';
 import MonsterEditor from './MonsterEditor';
 import { generateNpcLua, getNpcFileName } from './luaGenerator';
+import { useTranslation } from './i18n/LanguageContext';
+import LanguageSelector from './i18n/LanguageSelector';
+import LanguageSwitcher from './i18n/LanguageSwitcher';
 
 const DEFAULT_NPC = {
   name: '',
@@ -35,17 +38,6 @@ const DEFAULT_NPC = {
   keywords: []
 };
 
-const TABS = [
-  { key: 'basic', icon: '📋', label: 'Basic Info' },
-  { key: 'outfit', icon: '👕', label: 'Appearance' },
-  { key: 'messages', icon: '💬', label: 'Messages' },
-  { key: 'shop', icon: '💰', label: 'Shop' },
-  { key: 'keywords', icon: '🗨️', label: 'Keywords' },
-  { key: 'preview', icon: '👁️', label: 'Preview Lua' },
-  { key: 'scriptcreator', icon: '🤖', label: 'Script Creator' },
-  { key: 'monstereditor', icon: '🐉', label: 'Monster Editor' }
-];
-
 // Pequeño aviso inline no bloqueante (reemplaza a window.alert()).
 // En Electron, alert() puede dejar la ventana en un estado donde el foco del
 // teclado no vuelve correctamente a los inputs de texto — por eso nunca se
@@ -56,6 +48,19 @@ const InlineNotice = ({ notice }) => {
 };
 
 const App = () => {
+  const { t, hasChosenLanguage } = useTranslation();
+
+  const TABS = [
+    { key: 'basic', icon: '📋', label: t('nav.basicInfo') },
+    { key: 'outfit', icon: '👕', label: t('nav.appearance') },
+    { key: 'messages', icon: '💬', label: t('nav.messages') },
+    { key: 'shop', icon: '💰', label: t('nav.shop') },
+    { key: 'keywords', icon: '🗨️', label: t('nav.keywords') },
+    { key: 'preview', icon: '👁️', label: t('nav.previewLua') },
+    { key: 'scriptcreator', icon: '🤖', label: t('nav.scriptCreator') },
+    { key: 'monstereditor', icon: '🐉', label: t('nav.monsterEditor') }
+  ];
+
   const [activeTab, setActiveTab] = useState('basic');
   const [npc, setNpc] = useState(DEFAULT_NPC);
   const fileInputRef = useRef(null);
@@ -87,22 +92,22 @@ const App = () => {
     const response = responseInput.trim();
 
     if (!keyword) {
-      setKeywordNotice({ type: 'error', text: '⚠️ Ingresa una keyword.' });
+      setKeywordNotice({ type: 'error', text: '⚠️ ' + t('keywords.enterKeyword') });
       return;
     }
     if (!response) {
-      setKeywordNotice({ type: 'error', text: '⚠️ Ingresa una respuesta.' });
+      setKeywordNotice({ type: 'error', text: '⚠️ ' + t('keywords.enterResponse') });
       return;
     }
     if (npc.keywords.some((k) => k.keyword === keyword)) {
-      setKeywordNotice({ type: 'error', text: '⚠️ Esa keyword ya existe.' });
+      setKeywordNotice({ type: 'error', text: '⚠️ ' + t('keywords.alreadyExists') });
       return;
     }
 
     setNpc((prev) => ({ ...prev, keywords: [...prev.keywords, { keyword, response, uid: Date.now() }] }));
     setKeywordInput('');
     setResponseInput('');
-    setKeywordNotice({ type: 'success', text: '✅ Keyword agregada.' });
+    setKeywordNotice({ type: 'success', text: '✅ ' + t('keywords.added') });
     setTimeout(() => setKeywordNotice(null), 2000);
   };
 
@@ -142,14 +147,13 @@ const App = () => {
       try {
         const imported = JSON.parse(e.target.result);
         setNpc({ ...DEFAULT_NPC, ...imported });
-        setImportNotice({ type: 'success', text: '✅ NPC importado correctamente.' });
+        setImportNotice({ type: 'success', text: '✅ ' + t('header.npcImportedOk') });
       } catch (err) {
-        setImportNotice({ type: 'error', text: '⚠️ Error al importar: ' + err.message });
+        setImportNotice({ type: 'error', text: '⚠️ ' + t('header.npcImportError') + err.message });
       }
       setTimeout(() => setImportNotice(null), 3000);
     };
     reader.readAsText(file);
-    // Permitir volver a seleccionar el mismo archivo más adelante
     event.target.value = '';
   };
 
@@ -157,19 +161,24 @@ const App = () => {
     navigator.clipboard.writeText(luaCode);
   };
 
+  if (!hasChosenLanguage) {
+    return <LanguageSelector />;
+  }
+
   return (
     <div className="app-container">
       <header className="app-header">
         <div className="header-content">
           <div className="logo">
             <span className="logo-icon">⚔️</span>
-            <h1>NPC Maker Pro</h1>
+            <h1>{t('common.appName')}</h1>
           </div>
           <div className="header-actions">
-            <button className="btn btn-gold" onClick={exportLua}>📥 Export Lua</button>
-            <button className="btn btn-gold" onClick={exportJSON}>📥 Export JSON</button>
-            <button className="btn btn-gold" onClick={() => fileInputRef.current?.click()}>📤 Import JSON</button>
+            <button className="btn btn-gold" onClick={exportLua}>📥 {t('header.exportLua')}</button>
+            <button className="btn btn-gold" onClick={exportJSON}>📥 {t('header.exportJson')}</button>
+            <button className="btn btn-gold" onClick={() => fileInputRef.current?.click()}>📤 {t('header.importJson')}</button>
             <input ref={fileInputRef} type="file" accept=".json" onChange={importJSON} style={{ display: 'none' }} />
+            <LanguageSwitcher />
           </div>
         </div>
         <InlineNotice notice={importNotice} />
@@ -178,7 +187,7 @@ const App = () => {
       <div className="main-content">
         <nav className="sidebar">
           <div className="nav-group">
-            <h3 className="nav-title">Configuration</h3>
+            <h3 className="nav-title">{t('nav.configuration')}</h3>
             {TABS.map((tab) => (
               <button
                 key={tab.key}
@@ -191,32 +200,29 @@ const App = () => {
           </div>
         </nav>
 
-        {/* Todos los paneles quedan SIEMPRE montados (solo se oculta con CSS el
-            que no está activo). Esto evita que se pierda lo escrito en
-            Script Creator (o en cualquier otra pestaña) al cambiar de menú. */}
         <div className="content-area">
           <div className="tab-content" style={{ display: activeTab === 'basic' ? 'flex' : 'none' }}>
             <div className="section">
-              <h2 className="section-title">Información Básica</h2>
+              <h2 className="section-title">{t('basicInfo.title')}</h2>
               <div className="form-grid">
                 <div className="form-group">
-                  <label>Nombre del NPC</label>
+                  <label>{t('basicInfo.npcName')}</label>
                   <input
                     type="text"
                     className="form-input"
                     value={npc.name}
                     onChange={(e) => update({ name: e.target.value })}
-                    placeholder="ej: Sarah the Merchant"
+                    placeholder={t('basicInfo.npcNamePlaceholder')}
                   />
                 </div>
               </div>
             </div>
 
             <div className="section">
-              <h2 className="section-title">Salud</h2>
+              <h2 className="section-title">{t('basicInfo.healthTitle')}</h2>
               <div className="form-grid">
                 <div className="form-group">
-                  <label>Health</label>
+                  <label>{t('basicInfo.health')}</label>
                   <input
                     type="number"
                     className="form-input"
@@ -226,7 +232,7 @@ const App = () => {
                   />
                 </div>
                 <div className="form-group">
-                  <label>Max Health</label>
+                  <label>{t('basicInfo.maxHealth')}</label>
                   <input
                     type="number"
                     className="form-input"
@@ -239,10 +245,10 @@ const App = () => {
             </div>
 
             <div className="section">
-              <h2 className="section-title">Movimiento</h2>
+              <h2 className="section-title">{t('basicInfo.movementTitle')}</h2>
               <div className="form-grid">
                 <div className="form-group">
-                  <label>Walk Interval (ms)</label>
+                  <label>{t('basicInfo.walkInterval')}</label>
                   <input
                     type="number"
                     className="form-input"
@@ -251,7 +257,7 @@ const App = () => {
                   />
                 </div>
                 <div className="form-group">
-                  <label>Walk Radius</label>
+                  <label>{t('basicInfo.walkRadius')}</label>
                   <input
                     type="number"
                     className="form-input"
@@ -260,7 +266,7 @@ const App = () => {
                   />
                 </div>
                 <div className="form-group">
-                  <label>Speed</label>
+                  <label>{t('basicInfo.speed')}</label>
                   <input
                     type="number"
                     className="form-input"
@@ -275,7 +281,7 @@ const App = () => {
                       checked={npc.floorChange}
                       onChange={(e) => update({ floorChange: e.target.checked })}
                     />
-                    Permite cambio de piso (floorchange)
+                    {t('basicInfo.floorChange')}
                   </label>
                 </div>
               </div>
@@ -284,7 +290,7 @@ const App = () => {
 
           <div className="tab-content" style={{ display: activeTab === 'outfit' ? 'flex' : 'none' }}>
             <div className="section">
-              <h2 className="section-title">Apariencia del NPC</h2>
+              <h2 className="section-title">{t('appearance.title')}</h2>
               <OutfitSelector
                 outfit={npc.outfit}
                 onChange={(outfit) => update({ outfit })}
@@ -294,10 +300,10 @@ const App = () => {
 
           <div className="tab-content" style={{ display: activeTab === 'messages' ? 'flex' : 'none' }}>
             <div className="section">
-              <h2 className="section-title">Mensajes del NPC</h2>
+              <h2 className="section-title">{t('messages.title')}</h2>
               <div className="form-grid-1">
                 <div className="form-group">
-                  <label>Greet (saludo) — usa |PLAYERNAME| para el nombre del jugador</label>
+                  <label>{t('messages.greetLabel')}</label>
                   <textarea
                     className="form-textarea"
                     rows="2"
@@ -306,7 +312,7 @@ const App = () => {
                   />
                 </div>
                 <div className="form-group">
-                  <label>Farewell (despedida)</label>
+                  <label>{t('messages.farewellLabel')}</label>
                   <textarea
                     className="form-textarea"
                     rows="2"
@@ -315,7 +321,7 @@ const App = () => {
                   />
                 </div>
                 <div className="form-group">
-                  <label>Walkaway (cuando el jugador se aleja)</label>
+                  <label>{t('messages.walkawayLabel')}</label>
                   <textarea
                     className="form-textarea"
                     rows="2"
@@ -324,7 +330,7 @@ const App = () => {
                   />
                 </div>
                 <div className="form-group">
-                  <label>Sell message (formato: %ix %s for %i gold.)</label>
+                  <label>{t('messages.sellLabel')}</label>
                   <textarea
                     className="form-textarea"
                     rows="2"
@@ -338,26 +344,23 @@ const App = () => {
 
           <div className="tab-content" style={{ display: activeTab === 'shop' ? 'flex' : 'none' }}>
             <div className="section">
-              <h2 className="section-title">Shop del NPC</h2>
-              <p className="section-hint">
-                Busca items reales por nombre o ID (base de datos de Tibia/Canary incluida).
-                Define precio de compra (buy = el NPC le vende al jugador) y/o venta (sell = el NPC le compra al jugador).
-              </p>
-              <ItemPicker onAdd={addShopItem} label="Agregar al shop" />
+              <h2 className="section-title">{t('shop.title')}</h2>
+              <p className="section-hint">{t('shop.hint')}</p>
+              <ItemPicker onAdd={addShopItem} label={t('shop.addToShop')} />
 
               <div className="items-list" style={{ marginTop: '20px' }}>
                 {npc.shop.items.length === 0 ? (
                   <div className="empty-state">
                     <span className="empty-icon">📦</span>
-                    <p>No hay items en el shop todavía</p>
+                    <p>{t('shop.empty')}</p>
                   </div>
                 ) : (
                   npc.shop.items.map((item) => (
                     <div key={item.uid} className="shop-item-row">
                       <span className="shop-item-name">{item.name}</span>
                       <span className="shop-item-id">#{item.id}</span>
-                      {item.buy !== '' && <span className="shop-item-tag buy">Buy: {item.buy}</span>}
-                      {item.sell !== '' && <span className="shop-item-tag sell">Sell: {item.sell}</span>}
+                      {item.buy !== '' && <span className="shop-item-tag buy">{t('shop.buy')}: {item.buy}</span>}
+                      {item.sell !== '' && <span className="shop-item-tag sell">{t('shop.sell')}: {item.sell}</span>}
                       {item.count > 1 && <span className="shop-item-tag">x{item.count}</span>}
                       <button className="btn btn-danger-sm" onClick={() => removeShopItem(item.uid)}>🗑️</button>
                     </div>
@@ -369,33 +372,31 @@ const App = () => {
 
           <div className="tab-content" style={{ display: activeTab === 'keywords' ? 'flex' : 'none' }}>
             <div className="section">
-              <h2 className="section-title">Keywords (Diálogos personalizados)</h2>
-              <p className="section-hint">
-                Cuando el jugador escriba una de estas palabras, el NPC responderá automáticamente.
-              </p>
+              <h2 className="section-title">{t('keywords.title')}</h2>
+              <p className="section-hint">{t('keywords.hint')}</p>
               <div className="form-grid">
                 <div className="form-group">
-                  <label>Keyword</label>
+                  <label>{t('keywords.keywordLabel')}</label>
                   <input
                     type="text"
                     className="form-input"
-                    placeholder="ej: quest, trade, name"
+                    placeholder={t('keywords.keywordPlaceholder')}
                     value={keywordInput}
                     onChange={(e) => setKeywordInput(e.target.value)}
                   />
                 </div>
                 <div className="form-group">
-                  <label>Response</label>
+                  <label>{t('keywords.responseLabel')}</label>
                   <input
                     type="text"
                     className="form-input"
-                    placeholder="Respuesta del NPC"
+                    placeholder={t('keywords.responsePlaceholder')}
                     value={responseInput}
                     onChange={(e) => setResponseInput(e.target.value)}
                   />
                 </div>
               </div>
-              <button className="btn btn-gold-sm" onClick={addKeyword}>➕ Agregar Keyword</button>
+              <button className="btn btn-gold-sm" onClick={addKeyword}>➕ {t('keywords.addKeyword')}</button>
 
               <InlineNotice notice={keywordNotice} />
 
@@ -403,7 +404,7 @@ const App = () => {
                 {npc.keywords.length === 0 ? (
                   <div className="empty-state">
                     <span className="empty-icon">💬</span>
-                    <p>No hay keywords configuradas</p>
+                    <p>{t('keywords.empty')}</p>
                   </div>
                 ) : (
                   npc.keywords.map((kw) => (
@@ -423,8 +424,8 @@ const App = () => {
           <div className="tab-content" style={{ display: activeTab === 'preview' ? 'flex' : 'none' }}>
             <div className="section">
               <div className="section-header">
-                <h2 className="section-title">Lua Script Preview (formato Canary)</h2>
-                <button className="btn btn-gold-sm" onClick={copyLuaToClipboard}>📋 Copiar</button>
+                <h2 className="section-title">{t('preview.title')}</h2>
+                <button className="btn btn-gold-sm" onClick={copyLuaToClipboard}>📋 {t('common.copy')}</button>
               </div>
               <div className="preview-box lua-preview">
                 <pre className="lua-code">{luaCode}</pre>
@@ -434,14 +435,14 @@ const App = () => {
 
           <div className="tab-content" style={{ display: activeTab === 'scriptcreator' ? 'flex' : 'none' }}>
             <div className="section">
-              <h2 className="section-title">🤖 Script Creator (CrystalServer)</h2>
+              <h2 className="section-title">{t('scriptCreator.title')}</h2>
               <ScriptCreator npc={npc} />
             </div>
           </div>
 
           <div className="tab-content" style={{ display: activeTab === 'monstereditor' ? 'flex' : 'none' }}>
             <div className="section">
-              <h2 className="section-title">🐉 Monster Editor (CrystalServer)</h2>
+              <h2 className="section-title">{t('monsterEditor.title')}</h2>
               <MonsterEditor />
             </div>
           </div>

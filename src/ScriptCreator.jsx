@@ -1,15 +1,11 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { callAI, extractLuaCode } from './aiClient';
 import { DEFAULT_AI_ENDPOINT, DEFAULT_AI_MODEL } from './secureConfig';
-import { CRYSTAL_SERVER_SYSTEM_PROMPT, SCRIPT_TYPES } from './crystalServerKnowledge';
+import { CRYSTAL_SERVER_SYSTEM_PROMPT, SCRIPT_TYPES_KEYS } from './crystalServerKnowledge';
 import { buildOutfitImageUrl } from './luaGenerator';
 import colorsData from './data/colors.json';
+import { useTranslation } from './i18n/LanguageContext';
 
-// ─────────────────────────────────────────────────────────────────────────
-// Construye un resumen en texto del NPC tal como está configurado en el
-// resto de la app (Basic Info + Appearance), para que la IA lo use como
-// datos reales en vez de tener que describirlo de nuevo desde cero.
-// ─────────────────────────────────────────────────────────────────────────
 function buildNpcContextSummary(npc) {
   const o = npc.outfit;
   const shopList = npc.shop?.items?.length
@@ -31,18 +27,12 @@ ${shopList}
 ${keywordList}`;
 }
 
-// ─────────────────────────────────────────────────────────────────────────
-// Panel de contexto: muestra automáticamente el nombre, apariencia y
-// monturas configuradas en Basic Info / Appearance, más los iconos de
-// diálogo correspondientes (trade, keywords, saludo/despedida).
-// ─────────────────────────────────────────────────────────────────────────
 const NpcContextPanel = ({ npc }) => {
+  const { t } = useTranslation();
   const [imgError, setImgError] = useState(false);
   const imgUrl = useMemo(() => buildOutfitImageUrl(npc.outfit), [npc.outfit]);
 
-  useEffect(() => {
-    setImgError(false);
-  }, [imgUrl]);
+  React.useEffect(() => { setImgError(false); }, [imgUrl]);
 
   const colorOf = (id) => colorsData.find((c) => c.id === id) || colorsData[0];
 
@@ -50,84 +40,80 @@ const NpcContextPanel = ({ npc }) => {
   const keywords = npc.keywords || [];
 
   return (
-    <div className="npc-context-panel">
+    <div className="npc-context-panel-compact">
       <div className="npc-context-header">
-        <span className="npc-context-title">🔎 NPC detectado automáticamente</span>
-        <span className="npc-context-hint">(se sincroniza solo con Basic Info y Appearance)</span>
+        <span className="npc-context-title">{t('scriptCreator.npcContextTitle')}</span>
+        <span className="npc-context-hint">{t('scriptCreator.npcContextHint')}</span>
       </div>
 
-      <div className="npc-context-body">
-        <div className="npc-context-sprite-lg">
-          {!imgError ? (
-            <img
-              src={imgUrl}
-              alt="preview"
-              className="character-sprite-lg"
-              onError={() => setImgError(true)}
-              onLoad={() => setImgError(false)}
-            />
-          ) : (
-            <span className="sprite-fallback-icon-lg">👤</span>
-          )}
-        </div>
+      <div className="npc-context-sprite-centered">
+        {!imgError ? (
+          <img
+            src={imgUrl}
+            alt="preview"
+            className="character-sprite-lg"
+            onError={() => setImgError(true)}
+            onLoad={() => setImgError(false)}
+          />
+        ) : (
+          <span className="sprite-fallback-icon-lg">👤</span>
+        )}
+      </div>
 
-        <div className="npc-context-info">
-          <div className="npc-context-name">
-            {npc.name ? npc.name : <em>(todavía sin nombre — ve a "Basic Info")</em>}
-          </div>
+      <div className="npc-context-name npc-context-name-centered">
+        {npc.name ? npc.name : <em>{t('scriptCreator.npcContextNoName')}</em>}
+      </div>
 
-          <div className="npc-context-pills">
-            <span className="outfit-meta-pill">Look: {npc.outfit.lookType}</span>
-            <span className="outfit-meta-pill">Addons: {npc.outfit.lookAddons}</span>
-            {npc.outfit.lookMount > 0 && <span className="outfit-meta-pill">Mount: {npc.outfit.lookMount}</span>}
-            <span className="outfit-meta-pill color-pill">
-              <i style={{ background: colorOf(npc.outfit.lookHead).hex }} /> Head
-            </span>
-            <span className="outfit-meta-pill color-pill">
-              <i style={{ background: colorOf(npc.outfit.lookBody).hex }} /> Body
-            </span>
-            <span className="outfit-meta-pill color-pill">
-              <i style={{ background: colorOf(npc.outfit.lookLegs).hex }} /> Legs
-            </span>
-            <span className="outfit-meta-pill color-pill">
-              <i style={{ background: colorOf(npc.outfit.lookFeet).hex }} /> Feet
-            </span>
-          </div>
+      <div className="npc-context-pills npc-context-pills-centered">
+        <span className="outfit-meta-pill">{t('appearance.look')}: {npc.outfit.lookType}</span>
+        <span className="outfit-meta-pill">{t('appearance.addons')}: {npc.outfit.lookAddons}</span>
+        {npc.outfit.lookMount > 0 && <span className="outfit-meta-pill">{t('appearance.mount')}: {npc.outfit.lookMount}</span>}
+      </div>
 
-          <div className="npc-context-dialog-icons">
-            <span className="dialog-icon-pill" title="Saludo configurado">👋 Greet</span>
-            {hasShop && <span className="dialog-icon-pill trade" title="Tiene shop configurado">💰 Trade</span>}
-            {keywords.map((k) => (
-              <span key={k.uid} className="dialog-icon-pill keyword" title={k.response}>
-                🗨️ {k.keyword}
-              </span>
-            ))}
-            <span className="dialog-icon-pill" title="Despedida configurada">👋 Bye</span>
-          </div>
-        </div>
+      <div className="npc-context-pills npc-context-pills-centered">
+        <span className="outfit-meta-pill color-pill">
+          <i style={{ background: colorOf(npc.outfit.lookHead).hex }} /> {t('appearance.head')}
+        </span>
+        <span className="outfit-meta-pill color-pill">
+          <i style={{ background: colorOf(npc.outfit.lookBody).hex }} /> {t('appearance.body')}
+        </span>
+        <span className="outfit-meta-pill color-pill">
+          <i style={{ background: colorOf(npc.outfit.lookLegs).hex }} /> {t('appearance.legs')}
+        </span>
+        <span className="outfit-meta-pill color-pill">
+          <i style={{ background: colorOf(npc.outfit.lookFeet).hex }} /> {t('appearance.feet')}
+        </span>
+      </div>
+
+      <div className="npc-context-dialog-icons npc-context-dialog-icons-centered">
+        <span className="dialog-icon-pill" title={t('scriptCreator.greetIcon')}>👋 {t('scriptCreator.greetIcon')}</span>
+        {hasShop && <span className="dialog-icon-pill trade" title={t('scriptCreator.tradeIcon')}>💰 {t('scriptCreator.tradeIcon')}</span>}
+        {keywords.map((k) => (
+          <span key={k.uid} className="dialog-icon-pill keyword" title={k.response}>
+            🗨️ {k.keyword}
+          </span>
+        ))}
+        <span className="dialog-icon-pill" title={t('scriptCreator.byeIcon')}>👋 {t('scriptCreator.byeIcon')}</span>
       </div>
     </div>
   );
 };
 
 const AdvancedSettings = ({ settings, onChange }) => {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
 
   return (
     <div className="advanced-settings">
       <button className="advanced-toggle" onClick={() => setOpen((o) => !o)}>
-        ⚙️ Configuración avanzada {open ? '▲' : '▼'}
+        ⚙️ {t('scriptCreator.advancedSettings')} {open ? '▲' : '▼'}
       </button>
       {open && (
         <div className="advanced-body">
-          <p className="section-hint">
-            Por defecto la app usa una API key integrada (ofuscada en el código) y el endpoint
-            de api.paxsenix.org. Solo cambia esto si tienes tu propia key/endpoint o si el formato
-            de respuesta de la API no coincide.
-          </p>
+          <p className="section-hint">{t('scriptCreator.advancedHint')}</p>
           <div className="form-grid">
             <div className="form-group">
-              <label>Endpoint</label>
+              <label>{t('scriptCreator.endpoint')}</label>
               <input
                 type="text"
                 className="form-input"
@@ -136,7 +122,7 @@ const AdvancedSettings = ({ settings, onChange }) => {
               />
             </div>
             <div className="form-group">
-              <label>Modelo</label>
+              <label>{t('scriptCreator.model')}</label>
               <input
                 type="text"
                 className="form-input"
@@ -145,11 +131,11 @@ const AdvancedSettings = ({ settings, onChange }) => {
               />
             </div>
             <div className="form-group">
-              <label>API Key propia (opcional, sobreescribe la integrada)</label>
+              <label>{t('scriptCreator.ownApiKey')}</label>
               <input
                 type="password"
                 className="form-input"
-                placeholder="dejar en blanco para usar la integrada"
+                placeholder={t('scriptCreator.ownApiKeyPlaceholder')}
                 value={settings.overrideApiKey}
                 onChange={(e) => onChange({ ...settings, overrideApiKey: e.target.value })}
               />
@@ -159,7 +145,7 @@ const AdvancedSettings = ({ settings, onChange }) => {
             className="btn btn-gold-sm"
             onClick={() => onChange({ endpoint: DEFAULT_AI_ENDPOINT, model: DEFAULT_AI_MODEL, overrideApiKey: '' })}
           >
-            ↺ Restaurar valores por defecto
+            ↺ {t('common.restore')}
           </button>
         </div>
       )}
@@ -168,6 +154,7 @@ const AdvancedSettings = ({ settings, onChange }) => {
 };
 
 const CreatePanel = ({ settings, npc }) => {
+  const { t } = useTranslation();
   const [scriptType, setScriptType] = useState('npc');
   const [description, setDescription] = useState('');
   const [loading, setLoading] = useState(false);
@@ -183,7 +170,7 @@ const CreatePanel = ({ settings, npc }) => {
     setLoading(true);
     setResult('');
     try {
-      const typeLabel = SCRIPT_TYPES.find((t) => t.value === scriptTypeArg)?.label || scriptTypeArg;
+      const typeLabel = t(`scriptCreator.scriptType${scriptTypeArg.charAt(0).toUpperCase()}${scriptTypeArg.slice(1)}`);
       const contextBlock = scriptTypeArg === 'npc'
         ? `\n${buildNpcContextSummary(npc)}\n\nUsa este contexto real como base del NPC a generar.`
         : '';
@@ -216,7 +203,7 @@ Responde con el código Lua completo dentro de un bloque \`\`\`lua, y antes del 
 
   const generate = () => {
     if (!description.trim()) {
-      setError('Describe qué debe hacer el script.');
+      setError(t('scriptCreator.describeMissing'));
       return;
     }
     const args = { scriptTypeArg: scriptType, descriptionArg: description };
@@ -254,48 +241,61 @@ Responde con el código Lua completo dentro de un bloque \`\`\`lua, y antes del 
 
   return (
     <div className="script-panel">
-      <h3 className="script-panel-title">✨ Crear Script Lua</h3>
-      <p className="section-hint">
-        Describe en lenguaje natural qué quieres que haga el script. La IA generará código
-        compatible con la API real de CrystalServer (NpcHandler, KeywordHandler, Game.createNpcType, etc.).
-      </p>
+      <h3 className="script-panel-title">✨ {t('scriptCreator.createTitle')}</h3>
+      <p className="section-hint">{t('scriptCreator.createHint')}</p>
 
       <div className="form-group">
-        <label>Tipo de script</label>
+        <label>{t('scriptCreator.scriptType')}</label>
         <select className="form-input" value={scriptType} onChange={(e) => setScriptType(e.target.value)}>
-          {SCRIPT_TYPES.map((t) => (
-            <option key={t.value} value={t.value}>{t.label}</option>
+          {SCRIPT_TYPES_KEYS.map((key) => (
+            <option key={key} value={key}>
+              {t(`scriptCreator.scriptType${key.charAt(0).toUpperCase()}${key.slice(1)}`)}
+            </option>
           ))}
         </select>
       </div>
 
-      {useNpcContext && <NpcContextPanel npc={npc} />}
+      {/* Panel único: preview a la izquierda, prompt a la derecha */}
+      <div className="script-creator-two-col">
+        <div className="script-creator-col-left">
+          {useNpcContext ? (
+            <NpcContextPanel npc={npc} />
+          ) : (
+            <div className="npc-context-panel-compact npc-context-placeholder">
+              <span className="sprite-fallback-icon-lg">📝</span>
+            </div>
+          )}
+        </div>
 
-      <div className="form-group">
-        <label>Describe el script {useNpcContext && '(detalles adicionales, opcional)'}</label>
-        <textarea
-          className="form-textarea"
-          rows="6"
-          placeholder={
-            useNpcContext
-              ? 'ej: Que también ofrezca curar al jugador por 50 gold si dice "heal"'
-              : 'ej: Un action que al usar una palanca abra una puerta en la posición X,Y,Z'
-          }
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-        />
-      </div>
+        <div className="script-creator-col-right">
+          <div className="form-group script-creator-textarea-group">
+            <label>
+              {t('scriptCreator.describeScript')} {useNpcContext && t('scriptCreator.describeScriptOptional')}
+            </label>
+            <textarea
+              className="form-textarea script-creator-textarea"
+              placeholder={
+                useNpcContext
+                  ? t('scriptCreator.describeScriptPlaceholderNpc')
+                  : t('scriptCreator.describeScriptPlaceholderOther')
+              }
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+          </div>
 
-      <div className="script-actions-row">
-        <button className="btn btn-gold" onClick={generate} disabled={loading}>
-          {loading ? '⏳ Generando...' : '🚀 Generar Script'}
-        </button>
-        <button className="btn btn-gold-sm" onClick={redo} disabled={loading || !lastPromptArgs}>
-          🔄 Rehacer
-        </button>
-        <button className="btn btn-danger-sm" onClick={clearAll} disabled={loading}>
-          🗑️ Borrar todo
-        </button>
+          <div className="script-actions-row">
+            <button className="btn btn-gold" onClick={generate} disabled={loading}>
+              {loading ? `⏳ ${t('scriptCreator.generating')}` : `🚀 ${t('scriptCreator.generateScript')}`}
+            </button>
+            <button className="btn btn-gold-sm" onClick={redo} disabled={loading || !lastPromptArgs}>
+              🔄 {t('common.redo')}
+            </button>
+            <button className="btn btn-danger-sm" onClick={clearAll} disabled={loading}>
+              🗑️ {t('common.clearAll')}
+            </button>
+          </div>
+        </div>
       </div>
 
       {error && <div className="prompt-error">⚠️ {error}</div>}
@@ -309,10 +309,10 @@ Responde con el código Lua completo dentro de un bloque \`\`\`lua, y antes del 
       {result && (
         <div className="result-block">
           <div className="result-header">
-            <span>📄 Script generado</span>
+            <span>📄 {t('scriptCreator.generatedScript')}</span>
             <div className="result-actions">
-              <button className="btn btn-gold-sm" onClick={copyResult}>📋 Copiar</button>
-              <button className="btn btn-gold-sm" onClick={downloadResult}>📥 Descargar .lua</button>
+              <button className="btn btn-gold-sm" onClick={copyResult}>📋 {t('common.copy')}</button>
+              <button className="btn btn-gold-sm" onClick={downloadResult}>📥 {t('scriptCreator.downloadLua')}</button>
             </div>
           </div>
           <pre className="lua-code">{result}</pre>
@@ -323,6 +323,7 @@ Responde con el código Lua completo dentro de un bloque \`\`\`lua, y antes del 
 };
 
 const ReviewPanel = ({ settings }) => {
+  const { t } = useTranslation();
   const [inputScript, setInputScript] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState('');
@@ -378,7 +379,7 @@ Responde primero con una lista breve de los problemas encontrados y las correcci
 
   const review = () => {
     if (!inputScript.trim()) {
-      setError('Pega o carga el script que quieres revisar.');
+      setError(t('scriptCreator.reviewMissing'));
       return;
     }
     runReview(inputScript);
@@ -411,34 +412,31 @@ Responde primero con una lista breve de los problemas encontrados y las correcci
 
   return (
     <div className="script-panel">
-      <h3 className="script-panel-title">🛠️ Revisar y Corregir Script</h3>
-      <p className="section-hint">
-        Pega un script Lua antiguo o nuevo (de cualquier OT server) y la IA lo analizará y
-        corregirá para que sea compatible con la API real de CrystalServer.
-      </p>
+      <h3 className="script-panel-title">🛠️ {t('scriptCreator.reviewTitle')}</h3>
+      <p className="section-hint">{t('scriptCreator.reviewHint')}</p>
 
       <div className="form-group">
-        <label>Script a revisar</label>
+        <label>{t('scriptCreator.scriptToReview')}</label>
         <textarea
           className="form-textarea code-textarea"
           rows="10"
-          placeholder="Pega aquí tu script .lua..."
+          placeholder={t('scriptCreator.scriptToReviewPlaceholder')}
           value={inputScript}
           onChange={(e) => setInputScript(e.target.value)}
         />
       </div>
 
       <div className="script-actions-row">
-        <button className="btn btn-gold-sm" onClick={() => fileRef.current?.click()}>📂 Cargar archivo .lua</button>
+        <button className="btn btn-gold-sm" onClick={() => fileRef.current?.click()}>📂 {t('scriptCreator.loadLuaFile')}</button>
         <input ref={fileRef} type="file" accept=".lua,.txt" onChange={handleFile} style={{ display: 'none' }} />
         <button className="btn btn-gold" onClick={review} disabled={loading}>
-          {loading ? '⏳ Analizando...' : '🔍 Analizar y Corregir'}
+          {loading ? `⏳ ${t('scriptCreator.analyzing')}` : `🔍 ${t('scriptCreator.analyzeFix')}`}
         </button>
         <button className="btn btn-gold-sm" onClick={redo} disabled={loading || !inputScript.trim()}>
-          🔄 Rehacer
+          🔄 {t('common.redo')}
         </button>
         <button className="btn btn-danger-sm" onClick={clearAll} disabled={loading}>
-          🗑️ Borrar todo
+          🗑️ {t('common.clearAll')}
         </button>
       </div>
 
@@ -446,7 +444,7 @@ Responde primero con una lista breve de los problemas encontrados y las correcci
 
       {explanation && (
         <div className="ai-explanation">
-          <strong>Correcciones aplicadas:</strong>
+          <strong>{t('scriptCreator.fixesApplied')}</strong>
           <div>{explanation}</div>
         </div>
       )}
@@ -454,10 +452,10 @@ Responde primero con una lista breve de los problemas encontrados y las correcci
       {result && (
         <div className="result-block">
           <div className="result-header">
-            <span>✅ Script corregido</span>
+            <span>✅ {t('scriptCreator.fixedScript')}</span>
             <div className="result-actions">
-              <button className="btn btn-gold-sm" onClick={copyResult}>📋 Copiar</button>
-              <button className="btn btn-gold-sm" onClick={downloadResult}>📥 Descargar .lua</button>
+              <button className="btn btn-gold-sm" onClick={copyResult}>📋 {t('common.copy')}</button>
+              <button className="btn btn-gold-sm" onClick={downloadResult}>📥 {t('scriptCreator.downloadLua')}</button>
             </div>
           </div>
           <pre className="lua-code">{result}</pre>
@@ -468,6 +466,7 @@ Responde primero con una lista breve de los problemas encontrados y las correcci
 };
 
 const ScriptCreator = ({ npc }) => {
+  const { t } = useTranslation();
   const [activePanel, setActivePanel] = useState('create');
   const [settings, setSettings] = useState({
     endpoint: DEFAULT_AI_ENDPOINT,
@@ -478,7 +477,7 @@ const ScriptCreator = ({ npc }) => {
   return (
     <div className="script-creator">
       <div className="apikey-status-pill">
-        🔒 Usando API key integrada {settings.overrideApiKey ? '(sobreescrita manualmente)' : '(por defecto)'}
+        🔒 {t('scriptCreator.usingKey')} {settings.overrideApiKey ? t('scriptCreator.overridden') : t('scriptCreator.byDefault')}
       </div>
 
       <AdvancedSettings settings={settings} onChange={setSettings} />
@@ -488,18 +487,16 @@ const ScriptCreator = ({ npc }) => {
           className={`panel-tab ${activePanel === 'create' ? 'active' : ''}`}
           onClick={() => setActivePanel('create')}
         >
-          ✨ Crear Script
+          ✨ {t('scriptCreator.tabCreate')}
         </button>
         <button
           className={`panel-tab ${activePanel === 'review' ? 'active' : ''}`}
           onClick={() => setActivePanel('review')}
         >
-          🛠️ Revisar y Corregir
+          🛠️ {t('scriptCreator.tabReview')}
         </button>
       </div>
 
-      {/* Ambos paneles quedan siempre montados para no perder lo escrito
-          al alternar entre "Crear" y "Revisar". */}
       <div className="script-creator-body">
         <div style={{ display: activePanel === 'create' ? 'block' : 'none' }}>
           <CreatePanel settings={settings} npc={npc} />

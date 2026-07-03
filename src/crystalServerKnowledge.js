@@ -128,13 +128,17 @@ Cuando se te pida REVISAR/CORREGIR un script: identifica explícitamente qué pa
 incompatibles o están desactualizadas, explica brevemente cada corrección, y entrega el script
 completo ya corregido y listo para usar en CrystalServer.`;
 
-export const SCRIPT_TYPES = [
-  { value: 'npc', label: 'NPC' },
-  { value: 'action', label: 'Action (uso de item)' },
-  { value: 'talkaction', label: 'Talkaction (comando de chat)' },
-  { value: 'creaturescript', label: 'CreatureScript (eventos de criatura)' },
-  { value: 'moveevent', label: 'MoveEvent (step/equip/de-equip)' },
-  { value: 'globalevent', label: 'GlobalEvent (eventos del servidor)' },
-  { value: 'spell', label: 'Spell (hechizo)' },
-  { value: 'other', label: 'Otro / No estoy seguro' }
+// Las etiquetas visibles ahora viven en los diccionarios de i18n
+// (scriptCreator.scriptTypeNpc, scriptTypeAction, etc.) para soportar los
+// 3 idiomas de la app. Este array solo define las claves/valores reales
+// que se usan al construir el prompt para la IA.
+export const SCRIPT_TYPES_KEYS = [
+  'npc',
+  'action',
+  'talkaction',
+  'creaturescript',
+  'moveevent',
+  'globalevent',
+  'spell',
+  'other'
 ];

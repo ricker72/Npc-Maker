@@ -3,14 +3,17 @@ import outfitsData from './data/outfits.json';
 import colorsData from './data/colors.json';
 import mountsData from './data/mounts.json';
 import { buildOutfitImageUrl } from './luaGenerator';
-
-const SUB_PANELS = [
-  { key: 'looktype', label: '🎨 Looktype & Colores' },
-  { key: 'outfitsmounts', label: '👕 Outfits & Mounts' },
-  { key: 'addons', label: '➕ Addons' }
-];
+import { useTranslation } from './i18n/LanguageContext';
 
 const OutfitSelector = ({ outfit, onChange }) => {
+  const { t } = useTranslation();
+
+  const SUB_PANELS = [
+    { key: 'looktype', label: `🎨 ${t('appearance.tabLooktype')}` },
+    { key: 'outfitsmounts', label: `👕 ${t('appearance.tabOutfitsMounts')}` },
+    { key: 'addons', label: `➕ ${t('appearance.tabAddons')}` }
+  ];
+
   const [subPanel, setSubPanel] = useState('looktype');
   const [gender, setGender] = useState('male');
   const [activeColorTarget, setActiveColorTarget] = useState('lookHead');
@@ -107,10 +110,10 @@ const OutfitSelector = ({ outfit, onChange }) => {
   };
 
   const colorTargets = [
-    { key: 'lookHead', label: 'Head' },
-    { key: 'lookBody', label: 'Body' },
-    { key: 'lookLegs', label: 'Legs' },
-    { key: 'lookFeet', label: 'Feet' }
+    { key: 'lookHead', label: t('appearance.head') },
+    { key: 'lookBody', label: t('appearance.body') },
+    { key: 'lookLegs', label: t('appearance.legs') },
+    { key: 'lookFeet', label: t('appearance.feet') }
   ];
 
   const colorOf = (key) => {
@@ -134,19 +137,19 @@ const OutfitSelector = ({ outfit, onChange }) => {
           ) : (
             <div className="sprite-fallback">
               <span className="sprite-fallback-icon">👤</span>
-              <p>Preview no disponible offline</p>
-              <small>(se cargará al tener conexión a internet)</small>
+              <p>{t('appearance.previewUnavailable')}</p>
+              <small>{t('appearance.previewUnavailableHint')}</small>
             </div>
           )}
         </div>
         <div className="outfit-meta">
-          <span className="outfit-meta-pill">Look: {outfit.lookType}</span>
-          <span className="outfit-meta-pill">Addons: {outfit.lookAddons}</span>
-          {outfit.lookMount > 0 && <span className="outfit-meta-pill">Mount: {outfit.lookMount}</span>}
+          <span className="outfit-meta-pill">{t('appearance.look')}: {outfit.lookType}</span>
+          <span className="outfit-meta-pill">{t('appearance.addons')}: {outfit.lookAddons}</span>
+          {outfit.lookMount > 0 && <span className="outfit-meta-pill">{t('appearance.mount')}: {outfit.lookMount}</span>}
         </div>
         <div className="outfit-random-actions">
-          <button className="btn btn-gold-sm" onClick={randomizeColors}>🎲 Random Colors</button>
-          <button className="btn btn-gold-sm" onClick={randomizeFull}>✨ Random Outfit</button>
+          <button className="btn btn-gold-sm" onClick={randomizeColors}>🎲 {t('appearance.randomColors')}</button>
+          <button className="btn btn-gold-sm" onClick={randomizeFull}>✨ {t('appearance.randomOutfit')}</button>
         </div>
       </div>
 
@@ -167,9 +170,9 @@ const OutfitSelector = ({ outfit, onChange }) => {
         {/* ───────── PANEL 1: Looktype & Colores ───────── */}
         {subPanel === 'looktype' && (
           <div className="outfit-block">
-            <h4>Looktype</h4>
+            <h4>{t('appearance.looktypeTitle')}</h4>
             <div className="form-group">
-              <label>ID de Looktype</label>
+              <label>{t('appearance.looktypeId')}</label>
               <input
                 type="number"
                 className="form-input"
@@ -179,16 +182,16 @@ const OutfitSelector = ({ outfit, onChange }) => {
               />
             </div>
 
-            <h4 style={{ marginTop: '16px' }}>Paleta de Colores</h4>
+            <h4 style={{ marginTop: '16px' }}>{t('appearance.colorPaletteTitle')}</h4>
             <div className="color-target-tabs">
-              {colorTargets.map((t) => (
+              {colorTargets.map((ct) => (
                 <button
-                  key={t.key}
-                  className={`color-target-tab ${activeColorTarget === t.key ? 'active' : ''}`}
-                  onClick={() => setActiveColorTarget(t.key)}
+                  key={ct.key}
+                  className={`color-target-tab ${activeColorTarget === ct.key ? 'active' : ''}`}
+                  onClick={() => setActiveColorTarget(ct.key)}
                 >
-                  <span className="color-target-swatch" style={{ background: colorOf(t.key).hex }} />
-                  {t.label}
+                  <span className="color-target-swatch" style={{ background: colorOf(ct.key).hex }} />
+                  {ct.label}
                 </button>
               ))}
             </div>
@@ -212,23 +215,23 @@ const OutfitSelector = ({ outfit, onChange }) => {
           <>
             <div className="outfit-block">
               <div className="outfit-block-header">
-                <h4>Outfit</h4>
+                <h4>{t('appearance.outfitTitle')}</h4>
                 <div className="gender-toggle">
                   <button
                     className={`pill-btn ${gender === 'male' ? 'active' : ''}`}
                     onClick={() => handleGenderChange('male')}
-                  >Male</button>
+                  >{t('common.male')}</button>
                   <button
                     className={`pill-btn ${gender === 'female' ? 'active' : ''}`}
                     onClick={() => handleGenderChange('female')}
-                  >Female</button>
+                  >{t('common.female')}</button>
                 </div>
               </div>
 
               <input
                 type="text"
                 className="form-input search-input"
-                placeholder="🔍 Buscar outfit..."
+                placeholder={`🔍 ${t('appearance.searchOutfit')}`}
                 value={outfitSearch}
                 onChange={(e) => setOutfitSearch(e.target.value)}
               />
@@ -245,21 +248,21 @@ const OutfitSelector = ({ outfit, onChange }) => {
                   </div>
                 ))}
                 {filteredOutfits.length === 0 && (
-                  <div className="empty-state-sm">Sin resultados</div>
+                  <div className="empty-state-sm">{t('common.noResults')}</div>
                 )}
               </div>
             </div>
 
             <div className="outfit-block">
               <div className="outfit-block-header">
-                <h4>Mount (montura) — {mountsData.length} disponibles</h4>
+                <h4>{t('appearance.mountTitle')} — {mountsData.length} {t('appearance.mountAvailable')}</h4>
                 <label className="checkbox-label">
                   <input
                     type="checkbox"
                     checked={mountEnabled}
                     onChange={(e) => toggleMount(e.target.checked)}
                   />
-                  Habilitar
+                  {t('appearance.enable')}
                 </label>
               </div>
 
@@ -268,7 +271,7 @@ const OutfitSelector = ({ outfit, onChange }) => {
                   <input
                     type="text"
                     className="form-input search-input"
-                    placeholder="🔍 Buscar mount..."
+                    placeholder={`🔍 ${t('appearance.searchMount')}`}
                     value={mountSearch}
                     onChange={(e) => setMountSearch(e.target.value)}
                   />
@@ -284,7 +287,7 @@ const OutfitSelector = ({ outfit, onChange }) => {
                       </div>
                     ))}
                     {filteredMounts.length === 0 && (
-                      <div className="empty-state-sm">Sin resultados</div>
+                      <div className="empty-state-sm">{t('common.noResults')}</div>
                     )}
                   </div>
                 </>
@@ -296,7 +299,7 @@ const OutfitSelector = ({ outfit, onChange }) => {
         {/* ───────── PANEL 3: Addons ───────── */}
         {subPanel === 'addons' && (
           <div className="outfit-block">
-            <h4>Addons</h4>
+            <h4>{t('appearance.addonsTitle')}</h4>
             <div className="addon-checkboxes">
               <label className="checkbox-label">
                 <input
@@ -308,7 +311,7 @@ const OutfitSelector = ({ outfit, onChange }) => {
                     onChange({ ...outfit, lookAddons: addons });
                   }}
                 />
-                Addon 1
+                {t('appearance.addon1')}
               </label>
               <label className="checkbox-label">
                 <input
@@ -320,7 +323,7 @@ const OutfitSelector = ({ outfit, onChange }) => {
                     onChange({ ...outfit, lookAddons: addons });
                   }}
                 />
-                Addon 2
+                {t('appearance.addon2')}
               </label>
             </div>
           </div>

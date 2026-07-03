@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, shell } = require('electron');
+const { app, BrowserWindow, Menu, shell, ipcMain } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
@@ -173,6 +173,11 @@ async function bootApp() {
   mainWindow.show();
   mainWindow.maximize();
 }
+
+// El launcher pide la versión real (leída de package.json vía app.getVersion())
+// en vez de tener un número hardcodeado en el HTML. Así, al subir la versión
+// en package.json para un release nuevo, el launcher se actualiza solo.
+ipcMain.handle('get-app-version', () => app.getVersion());
 
 app.on('ready', bootApp);
 

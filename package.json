@@ -1,6 +1,6 @@
 {
   "name": "npc-maker-pro",
-  "version": "2.6.3",
+  "version": "2.7.0",
   "description": "NPC Maker Pro - Crea y gestiona NPCs para servidores OpenTibia/Canary/CrystalServer",
   "main": "public/electron.js",
   "homepage": "./",

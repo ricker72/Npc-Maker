@@ -138,7 +138,7 @@
 
   <div class="info-layer" id="infoLayer">
     <div class="app-title">NPC MAKER PRO</div>
-    <div class="app-version">v2.2.0</div>
+    <div class="app-version" id="appVersion">v...</div>
     <div class="app-developer">⚡ Iniciando aplicación ⚡</div>
 
     <div class="progress-container">
@@ -340,6 +340,18 @@
       }
     }
     window.__setLauncherProgress = setProgress;
+
+    // Versión real de la app (leída de package.json en el proceso principal).
+    // Así el launcher siempre muestra la versión correcta sin editar el HTML
+    // manualmente en cada release.
+    const appVersionEl = document.getElementById('appVersion');
+    if (window.launcherApi && typeof window.launcherApi.getAppVersion === 'function') {
+      window.launcherApi.getAppVersion()
+        .then((version) => { appVersionEl.textContent = 'v' + version; })
+        .catch(() => { appVersionEl.textContent = ''; });
+    } else {
+      appVersionEl.textContent = '';
+    }
 
     if (window.launcherApi && typeof window.launcherApi.onProgress === 'function') {
       window.launcherApi.onProgress((percent, label) => setProgress(percent, label));
