@@ -1,6 +1,7 @@
-const { app, BrowserWindow, Menu, shell, ipcMain } = require('electron');
+const { app, BrowserWindow, Menu, shell, ipcMain, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const tibiaAssets = require('./tibiaAssetLoader');
 
 const isDev = !app.isPackaged;
 
@@ -98,6 +99,31 @@ function delay(ms) {
 }
 
 // ───────────────────────────────────────────────────────────────────────────
+// Config persistida (config.json en userData). Se usa, entre otras cosas,
+// para recordar la carpeta de assets del cliente Tibia (outfits/monturas)
+// que el usuario haya seleccionado, y no tener que pedirla cada vez que
+// abre la app.
+// ───────────────────────────────────────────────────────────────────────────
+function getConfigPath() {
+  return path.join(app.getPath('userData'), 'config.json');
+}
+
+function readConfig() {
+  try {
+    const raw = fs.readFileSync(getConfigPath(), 'utf-8');
+    return JSON.parse(raw);
+  } catch {
+    return {};
+  }
+}
+
+function writeConfigField(key, value) {
+  const config = readConfig();
+  config[key] = value;
+  fs.writeFileSync(getConfigPath(), JSON.stringify(config, null, 2), 'utf-8');
+}
+
+// ───────────────────────────────────────────────────────────────────────────
 // Ventanas
 // ───────────────────────────────────────────────────────────────────────────
 function createSplashWindow() {
@@ -178,6 +204,50 @@ async function bootApp() {
 // en vez de tener un número hardcodeado en el HTML. Así, al subir la versión
 // en package.json para un release nuevo, el launcher se actualiza solo.
 ipcMain.handle('get-app-version', () => app.getVersion());
+
+// ───────────────────────────────────────────────────────────────────────────
+// IPC: assets de cliente Tibia (outfits/monturas reales con sus sprites)
+// ───────────────────────────────────────────────────────────────────────────
+
+// Al abrir la app, el renderer llama esto para saber si ya habia una carpeta
+// de assets configurada de una sesion anterior, e intentar recargarla sola.
+ipcMain.handle('tibia-assets:get-saved-path', () => {
+  const config = readConfig();
+  return config.tibiaAssetsPath || null;
+});
+
+ipcMain.handle('tibia-assets:load-saved', async () => {
+  const config = readConfig();
+  if (!config.tibiaAssetsPath) return { ok: false, error: 'No hay carpeta guardada.' };
+  return tibiaAssets.loadAssets(config.tibiaAssetsPath);
+});
+
+// Abre el selector de carpetas nativo, y si la carpeta elegida (o su
+// subcarpeta "assets") contiene un catalog-content.json valido, la carga y
+// la recuerda para la proxima vez.
+ipcMain.handle('tibia-assets:select-folder', async () => {
+  const result = await dialog.showOpenDialog(mainWindow, {
+    title: 'Selecciona la carpeta "assets" del cliente Tibia',
+    properties: ['openDirectory'],
+  });
+  if (result.canceled || result.filePaths.length === 0) {
+    return { ok: false, canceled: true };
+  }
+  const chosen = result.filePaths[0];
+  const loadResult = await tibiaAssets.loadAssets(chosen);
+  if (loadResult.ok) {
+    writeConfigField('tibiaAssetsPath', loadResult.path);
+  }
+  return loadResult;
+});
+
+ipcMain.handle('tibia-assets:get-frame', (_event, lookType, options) => {
+  try {
+    return tibiaAssets.getAppearanceFrame(lookType, options);
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
 
 app.on('ready', bootApp);
 

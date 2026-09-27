@@ -4,6 +4,7 @@ import colorsData from './data/colors.json';
 import mountsData from './data/mounts.json';
 import { buildOutfitImageUrl } from './luaGenerator';
 import { useTranslation } from './i18n/LanguageContext';
+import TibiaOutfitCanvas, { DIRECTION_LABELS } from './TibiaOutfitCanvas';
 
 const OutfitSelector = ({ outfit, onChange }) => {
   const { t } = useTranslation();
@@ -21,6 +22,48 @@ const OutfitSelector = ({ outfit, onChange }) => {
   const [mountSearch, setMountSearch] = useState('');
   const [mountEnabled, setMountEnabled] = useState(!!outfit.lookMount);
   const [imgError, setImgError] = useState(false);
+
+  // Estado de los assets reales del cliente (outfits/monturas con sprites
+  // propios en vez del servicio externo). Solo existe window.tibiaAssets
+  // dentro de la app de Electron (no en el modo dev de navegador suelto).
+  const hasTibiaAssetsApi = typeof window !== 'undefined' && !!window.tibiaAssets;
+  const [assetsStatus, setAssetsStatus] = useState({ loading: hasTibiaAssetsApi, loaded: false, error: null, outfitCount: 0 });
+  const [previewDirection, setPreviewDirection] = useState(2); // Sur (frente), por defecto
+  const [previewAnimate, setPreviewAnimate] = useState(false);
+
+  useEffect(() => {
+    if (!hasTibiaAssetsApi) return;
+    let cancelled = false;
+    (async () => {
+      const savedPath = await window.tibiaAssets.getSavedPath();
+      if (!savedPath) {
+        if (!cancelled) setAssetsStatus({ loading: false, loaded: false, error: null, outfitCount: 0 });
+        return;
+      }
+      const result = await window.tibiaAssets.loadSaved();
+      if (cancelled) return;
+      if (result.ok) {
+        setAssetsStatus({ loading: false, loaded: true, error: null, outfitCount: result.outfitCount });
+      } else {
+        setAssetsStatus({ loading: false, loaded: false, error: result.error, outfitCount: 0 });
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [hasTibiaAssetsApi]);
+
+  const handleSelectAssetsFolder = async () => {
+    setAssetsStatus((s) => ({ ...s, loading: true }));
+    const result = await window.tibiaAssets.selectFolder();
+    if (result.canceled) {
+      setAssetsStatus((s) => ({ ...s, loading: false }));
+      return;
+    }
+    if (result.ok) {
+      setAssetsStatus({ loading: false, loaded: true, error: null, outfitCount: result.outfitCount });
+    } else {
+      setAssetsStatus({ loading: false, loaded: false, error: result.error, outfitCount: 0 });
+    }
+  };
 
   const filteredOutfits = useMemo(() => {
     return outfitsData
@@ -126,7 +169,9 @@ const OutfitSelector = ({ outfit, onChange }) => {
       {/* Preview (siempre visible, sin importar el sub-panel activo) */}
       <div className="outfit-preview-panel">
         <div className="character-viewer">
-          {!imgError ? (
+          {assetsStatus.loaded ? (
+            <TibiaOutfitCanvas outfit={outfit} direction={previewDirection} animate={previewAnimate} size={192} />
+          ) : !imgError ? (
             <img
               src={imgUrl}
               alt="NPC outfit preview"
@@ -142,6 +187,48 @@ const OutfitSelector = ({ outfit, onChange }) => {
             </div>
           )}
         </div>
+
+        {assetsStatus.loaded && (
+          <div className="outfit-preview-controls">
+            <div className="direction-picker">
+              {DIRECTION_LABELS.map((label, dirIndex) => (
+                <button
+                  key={dirIndex}
+                  className={`pill-btn ${previewDirection === dirIndex ? 'active' : ''}`}
+                  onClick={() => setPreviewDirection(dirIndex)}
+                  title={`Dirección ${dirIndex}`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={previewAnimate}
+                onChange={(e) => setPreviewAnimate(e.target.checked)}
+              />
+              🚶 Animar caminata
+            </label>
+          </div>
+        )}
+
+        {hasTibiaAssetsApi && (
+          <div className="tibia-assets-panel">
+            {assetsStatus.loaded ? (
+              <span className="outfit-meta-pill">
+                ✅ Assets del cliente cargados ({assetsStatus.outfitCount} outfits/monturas)
+              </span>
+            ) : (
+              <>
+                <button className="btn btn-gold-sm" onClick={handleSelectAssetsFolder} disabled={assetsStatus.loading}>
+                  📁 {assetsStatus.loading ? 'Cargando…' : 'Cargar carpeta "assets" del cliente'}
+                </button>
+                {assetsStatus.error && <small className="tibia-assets-error">{assetsStatus.error}</small>}
+              </>
+            )}
+          </div>
+        )}
         <div className="outfit-meta">
           <span className="outfit-meta-pill">{t('appearance.look')}: {outfit.lookType}</span>
           <span className="outfit-meta-pill">{t('appearance.addons')}: {outfit.lookAddons}</span>

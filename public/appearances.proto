@@ -1,0 +1,52 @@
+// Esquema minimo de "appearances.dat" (formato de assets moderno de Tibia,
+// usado desde el cliente 12.90+ en adelante, incluido 15.33).
+//
+// Los numeros de campo fueron verificados manualmente contra un archivo
+// appearances.dat real (leyendo el wire format byte a byte), porque varias
+// copias de este .proto que circulan en internet traen los campos 2 y 3 de
+// FrameGroup invertidos. NO reordenar sin volver a verificar.
+//
+// Solo se declaran los mensajes que NPC Maker Pro necesita para componer
+// sprites de outfits/monturas (id, grupos de cuadros, e info de sprites).
+// Cualquier otro campo del .dat (flags de mercado, ayuda, animacion de
+// items, etc.) se ignora automaticamente por protobufjs al no estar
+// declarado (los campos desconocidos simplemente se saltan).
+
+syntax = "proto2";
+package tibia.protobuf.appearances;
+
+message Appearances {
+  repeated Appearance object = 1;
+  repeated Appearance outfit = 2;
+  repeated Appearance effect = 3;
+  repeated Appearance missile = 4;
+}
+
+message Appearance {
+  optional uint32 id = 1;
+  repeated FrameGroup frame_group = 2;
+}
+
+// fixed_frame_group: 0 = idle (parado), 1 = moving (caminando)
+message FrameGroup {
+  optional uint32 fixed_frame_group = 1;
+  optional uint32 id = 2;
+  optional SpriteInfo sprite_info = 3;
+}
+
+message SpriteInfo {
+  // patternWidth = direcciones (normalmente 4: N,E,S,W)
+  optional uint32 pattern_width = 1 [default = 1];
+  // patternHeight = variante de addon (0=base, 1=addon1, 2=addon2) para
+  // outfits; siempre 1 para monturas (no tienen addons).
+  optional uint32 pattern_height = 2 [default = 1];
+  // patternDepth = 2 si el outfit tiene una pose especial montado a
+  // caballo/montura (z=0 normal, z=1 montado); 1 si no.
+  optional uint32 pattern_depth = 3 [default = 1];
+  // layers = 2 si el sprite es coloreable (layer0 = plantilla en gris,
+  // layer1 = mascara de color); 1 si es un color fijo (la mayoria de
+  // monturas, efectos, etc.)
+  optional uint32 layers = 4 [default = 1];
+  repeated uint32 sprite_id = 5;
+  optional bool is_opaque = 6;
+}

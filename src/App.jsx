@@ -4,6 +4,7 @@ import OutfitSelector from './OutfitSelector';
 import ItemPicker from './ItemPicker';
 import ScriptCreator from './ScriptCreator';
 import MonsterEditor from './MonsterEditor';
+import PrivacyPolicy from './PrivacyPolicy';
 import { generateNpcLua, getNpcFileName } from './luaGenerator';
 import { useTranslation } from './i18n/LanguageContext';
 import LanguageSelector from './i18n/LanguageSelector';
@@ -58,7 +59,8 @@ const App = () => {
     { key: 'keywords', icon: '🗨️', label: t('nav.keywords') },
     { key: 'preview', icon: '👁️', label: t('nav.previewLua') },
     { key: 'scriptcreator', icon: '🤖', label: t('nav.scriptCreator') },
-    { key: 'monstereditor', icon: '🐉', label: t('nav.monsterEditor') }
+    { key: 'monstereditor', icon: '🐉', label: t('nav.monsterEditor') },
+    { key: 'privacy', icon: '🛡️', label: t('privacyNav') }
   ];
 
   const [activeTab, setActiveTab] = useState('basic');
@@ -188,7 +190,7 @@ const App = () => {
         <nav className="sidebar">
           <div className="nav-group">
             <h3 className="nav-title">{t('nav.configuration')}</h3>
-            {TABS.map((tab) => (
+            {TABS.filter((tb) => tb.key !== 'privacy').map((tab) => (
               <button
                 key={tab.key}
                 className={`nav-btn ${activeTab === tab.key ? 'active' : ''}`}
@@ -197,6 +199,15 @@ const App = () => {
                 <span className="nav-icon">{tab.icon}</span> {tab.label}
               </button>
             ))}
+          </div>
+          <div className="nav-group nav-legal-group">
+            <h3 className="nav-title">{t('navLegalTitle')}</h3>
+            <button
+              className={`nav-btn nav-btn-privacy ${activeTab === 'privacy' ? 'active' : ''}`}
+              onClick={() => setActiveTab('privacy')}
+            >
+              <span className="nav-icon">🛡️</span> {t('privacyNav')}
+            </button>
           </div>
         </nav>
 
@@ -445,6 +456,10 @@ const App = () => {
               <h2 className="section-title">{t('monsterEditor.title')}</h2>
               <MonsterEditor />
             </div>
+          </div>
+
+          <div className="tab-content" style={{ display: activeTab === 'privacy' ? 'flex' : 'none' }}>
+            <PrivacyPolicy />
           </div>
         </div>
       </div>
