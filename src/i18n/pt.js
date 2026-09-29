@@ -1,4 +1,3 @@
-// Dicionário de tradução em Português (Brasil)
 export default {
   common: {
     appName: 'NPC Maker Pro',
@@ -110,6 +109,16 @@ export default {
     sellLabel: 'Mensagem de venda (formato: %ix %s for %i gold.)'
   },
 
+  assets: {
+    loaded: 'Assets do cliente carregados',
+    loading: 'Carregando…',
+    selectFolder: 'Carregar a pasta "assets" do cliente',
+    changeFolder: 'Trocar de pasta',
+    downloadZip: 'Baixar os assets do cliente 15.33',
+    missingVersion: 'Assets do cliente Tibia não encontrados. Selecione a pasta "assets" do seu cliente ou baixe o pacote para ver as prévias.',
+    lookMissing: 'Este lookType não existe no appearances-*.dat do seu cliente. Baixe os assets 15.33 para vê-lo.'
+  },
+
   shop: {
     title: 'Loja do NPC',
     hint: 'Busque itens reais por nome ou ID (banco de dados de Tibia/Canary incluído). Defina o preço de compra (buy = o NPC vende ao jogador) e/ou de venda (sell = o NPC compra do jogador).',
@@ -123,7 +132,35 @@ export default {
     enterPrice: 'Informe pelo menos um preço de compra ou venda.',
     itemAdded: 'Item adicionado.',
     buy: 'Compra',
-    sell: 'Venda'
+    sell: 'Venda',
+    officialNpcPrice: 'Preço oficial do NPC',
+    manualSearchTitle: 'Adicionar ou buscar um item manualmente'
+  },
+
+  shopPalette: {
+    searchPlaceholder: 'Buscar item na paleta...',
+    add: 'Adicionar',
+    remove: 'Remover',
+    addShort: 'Adicionar à loja',
+    removeShort: 'Remover da loja',
+    added: 'Item adicionado à loja.',
+    removed: 'Item removido da loja.',
+    alreadyInShop: 'Esse item já está na loja.',
+    notInShop: 'Esse item não está na loja.',
+    noResults: 'Nenhum item corresponde à busca.',
+    moreHint: 'Role para baixo para carregar mais {count} itens...',
+    inShop: 'Na loja',
+    categories: {
+      all: 'Todos',
+      weapons: 'Armas',
+      armor: 'Armaduras',
+      deposits: 'Depósitos',
+      tools: 'Ferramentas',
+      coins: 'Moedas',
+      runes: 'Runas',
+      quest: 'Quest',
+      misc: 'Outros'
+    }
   },
 
   keywords: {
@@ -285,6 +322,14 @@ export default {
   monsterLibrary: {
     title: '📚 Biblioteca de Criaturas',
     hint: 'Importe seus próprios arquivos .lua de monstros (do seu servidor Canary/CrystalServer) para navegar e editá-los aqui. Também inclui um pequeno conjunto de referência (TibiaWiki, CC-BY-SA) para começar rapidamente.',
+    officialHint: 'Bestiário OFICIAL do cliente Tibia: cada criatura com seu looktype (clientid) real, vida, experiência, loot, ataques, defesas e resistências, agrupada por família. Clique em qualquer criatura para carregá-la completa no editor.',
+    officialBestiary: 'Bestiário oficial',
+    officialSource: 'Fonte: {file} · {monsters} monstros · {bosses} bosses · {families} famílias · regenerado em {date}',
+    allFamilies: 'Todas',
+    noLoot: 'sem loot',
+    showMore: 'Ver mais {count}…',
+    loadingBestiary: 'Carregando o bestiário oficial…',
+    bestiaryError: 'Não foi possível carregar src/data/monsters.json. Regenere com: npm run data:monsters',
     importFiles: 'Importar arquivos .lua',
     searchPlaceholder: 'Buscar criatura...',
     yourImported: 'Seus arquivos importados',
@@ -344,5 +389,28 @@ export default {
     s4p2: 'Você pode verificar que o arquivo é totalmente seguro compilando você mesmo direto do código-fonte ou usando os hashes oficiais publicados nas versões do repositório.',
     s4note: 'Instalador = comodidade. Portable = isolamento total sem tocar o registro. Ambos saem do mesmo código via GitHub Actions.'
   },
+
+  update: {
+    title: 'Nova versão disponível:',
+    current: 'Instalada:',
+    prerelease: 'Pré-lançamento',
+    download: 'Baixar',
+    releaseNotes: 'Notas',
+    later: 'Mais tarde',
+    laterHint: 'Ocultar apenas nesta sessão',
+    never: 'Não avisar',
+    neverHint: 'Não mostrar este aviso novamente para esta versão',
+    notesFrom: 'Notas do release de',
+    openFullNotes: 'Ver release completo no GitHub',
+    noNotes: 'Este release não tem notas de alterações.',
+    dialogTitle: 'Nova versão disponível! 🎉',
+    dialogMessage: 'Há uma nova versão do NPC Maker Pro pronta para baixar. Deseja baixá-la agora?',
+    dialogInstalled: 'Versão instalada',
+    dialogAvailable: 'Nova versão',
+    dialogYes: 'Sim, baixar',
+    dialogLater: 'Mais tarde',
+    dialogDontAsk: 'Não perguntar novamente para esta versão'
+  },
+
   outfitList: {}
 };

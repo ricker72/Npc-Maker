@@ -1,9 +1,15 @@
-const { app, BrowserWindow, Menu, shell, ipcMain, dialog } = require('electron');
+const { app, BrowserWindow, Menu, shell, ipcMain, dialog, screen } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const tibiaAssets = require('./tibiaAssetLoader');
+const updateChecker = require('./updateChecker');
 
 const isDev = !app.isPackaged;
+
+const ASSETS_DOWNLOAD_URL =
+  'https://github.com/ricker72/ricker72.github.io/releases/download/Clients/Cliente.15.33.assets.zip';
+
+const openExternalOriginal = shell.openExternal.bind(shell);
 
 let splashWindow;
 let mainWindow;
@@ -11,12 +17,6 @@ let mainWindow;
 let resolveMainReady;
 const mainReadyPromise = new Promise((resolve) => { resolveMainReady = resolve; });
 
-// ───────────────────────────────────────────────────────────────────────────
-// Bloqueo total de navegadores externos.
-// NPC Maker Pro nunca debe abrir Chrome/Edge/Firefox por fuera de la app:
-// se deniega cualquier intento de abrir una ventana nueva o navegar a una URL
-// externa desde cualquier BrowserWindow de la aplicación.
-// ───────────────────────────────────────────────────────────────────────────
 function hardenWindow(win) {
   win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
 
@@ -29,9 +29,6 @@ function hardenWindow(win) {
     }
   });
 
-  // DevTools deshabilitado por completo: no debe poder abrirse de ninguna
-  // forma (atajos de teclado, menú, ni programáticamente). Esto es una
-  // defensa adicional a "devTools: false" en webPreferences.
   win.webContents.on('devtools-opened', () => {
     win.webContents.closeDevTools();
   });
@@ -47,12 +44,6 @@ function hardenWindow(win) {
   });
 }
 
-// ───────────────────────────────────────────────────────────────────────────
-// "Instalación"/inicialización real de primer arranque.
-// No usamos navegadores ni procesos externos: todo ocurre dentro del propio
-// proceso de Electron mientras se muestra el launcher. Esto prepara las
-// carpetas de datos del usuario (configuración, NPCs exportados, etc.).
-// ───────────────────────────────────────────────────────────────────────────
 function reportProgress(percent, label) {
   if (splashWindow && !splashWindow.isDestroyed()) {
     splashWindow.webContents.send('setup-progress', percent, label);
@@ -98,12 +89,6 @@ function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-// ───────────────────────────────────────────────────────────────────────────
-// Config persistida (config.json en userData). Se usa, entre otras cosas,
-// para recordar la carpeta de assets del cliente Tibia (outfits/monturas)
-// que el usuario haya seleccionado, y no tener que pedirla cada vez que
-// abre la app.
-// ───────────────────────────────────────────────────────────────────────────
 function getConfigPath() {
   return path.join(app.getPath('userData'), 'config.json');
 }
@@ -123,9 +108,72 @@ function writeConfigField(key, value) {
   fs.writeFileSync(getConfigPath(), JSON.stringify(config, null, 2), 'utf-8');
 }
 
-// ───────────────────────────────────────────────────────────────────────────
-// Ventanas
-// ───────────────────────────────────────────────────────────────────────────
+
+
+
+function getWorkArea(win) {
+  
+  
+  const display = win && !win.isDestroyed()
+    ? screen.getDisplayMatching(win.getBounds())
+    : screen.getPrimaryDisplay();
+  return display.workArea;
+}
+
+function fitToWorkArea(win, preferred) {
+  if (!win || win.isDestroyed()) return;
+
+  const area = getWorkArea(win);
+  const prefW = preferred.width || 1400;
+  const prefH = preferred.height || 900;
+
+  
+  const width = Math.max(480, Math.min(prefW, area.width));
+  const height = Math.max(360, Math.min(prefH, area.height));
+
+  
+  
+  win.setMinimumSize(
+    Math.min(preferred.minWidth || 1000, width),
+    Math.min(preferred.minHeight || 700, height)
+  );
+
+  
+  
+  win.setBounds({
+    x: Math.round(area.x + (area.width - width) / 2),
+    y: Math.round(area.y + (area.height - height) / 2),
+    width,
+    height
+  });
+}
+
+
+function fillWorkArea(win) {
+  if (!win || win.isDestroyed()) return;
+  const area = getWorkArea(win);
+  const [minW, minH] = win.getMinimumSize();
+
+  
+  
+  
+  
+  const width = area.width;
+  const height = area.height;
+
+  win.setMinimumSize(
+    Math.min(minW, width),
+    Math.min(minH, height)
+  );
+
+  win.setBounds({
+    x: area.x,
+    y: area.y,
+    width,
+    height
+  });
+}
+
 function createSplashWindow() {
   splashWindow = new BrowserWindow({
     width: 900,
@@ -145,6 +193,10 @@ function createSplashWindow() {
     }
   });
 
+  
+  
+  fitToWorkArea(splashWindow, { width: 900, height: 600 });
+
   hardenWindow(splashWindow);
   splashWindow.loadFile(path.join(__dirname, 'launcher.html'));
   splashWindow.on('closed', () => { splashWindow = null; });
@@ -152,11 +204,13 @@ function createSplashWindow() {
 
 function createMainWindow() {
   mainWindow = new BrowserWindow({
+    
+    
+    show: false,
     width: 1400,
     height: 900,
     minWidth: 1000,
     minHeight: 700,
-    show: false,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
@@ -165,6 +219,49 @@ function createMainWindow() {
       preload: path.join(__dirname, 'preload.js')
     },
     icon: path.join(__dirname, 'icon.ico')
+  });
+
+  fitToWorkArea(mainWindow, { width: 1400, height: 900, minWidth: 1000, minHeight: 700 });
+
+  
+  
+  const refit = () => {
+    if (mainWindow && !mainWindow.isDestroyed() && !mainWindow.isMaximized()) {
+      fitToWorkArea(mainWindow, mainWindow.getBounds());
+    }
+  };
+  screen.on('display-metrics-changed', refit);
+  screen.on('display-added', refit);
+  screen.on('display-removed', refit);
+
+  
+  
+  
+  
+  
+  
+  
+  let maximizing = false;
+
+  mainWindow.on('maximize', () => {
+    if (maximizing) return;
+    maximizing = true;
+    setImmediate(() => {
+      
+      
+      
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.unmaximize();
+        fillWorkArea(mainWindow);
+      }
+      maximizing = false;
+    });
+  });
+
+  
+  mainWindow.on('unmaximize', () => {
+    if (maximizing || !mainWindow || mainWindow.isDestroyed()) return;
+    fitToWorkArea(mainWindow, { width: 1400, height: 900, minWidth: 1000, minHeight: 700 });
   });
 
   hardenWindow(mainWindow);
@@ -188,7 +285,7 @@ async function bootApp() {
   createSplashWindow();
   createMainWindow();
 
-  const minSplashTime = delay(2200); // evita que el launcher se vea como un flash
+  const minSplashTime = delay(2200);
   await Promise.all([runFirstRunSetup(), minSplashTime, mainReadyPromise]);
   reportProgress(100, 'Listo');
   await delay(400);
@@ -196,21 +293,34 @@ async function bootApp() {
   if (splashWindow && !splashWindow.isDestroyed()) {
     splashWindow.close();
   }
+
+  
+  
+  
+  
+  
   mainWindow.show();
-  mainWindow.maximize();
+  fillWorkArea(mainWindow);
 }
 
-// El launcher pide la versión real (leída de package.json vía app.getVersion())
-// en vez de tener un número hardcodeado en el HTML. Así, al subir la versión
-// en package.json para un release nuevo, el launcher se actualiza solo.
 ipcMain.handle('get-app-version', () => app.getVersion());
 
-// ───────────────────────────────────────────────────────────────────────────
-// IPC: assets de cliente Tibia (outfits/monturas reales con sus sprites)
-// ───────────────────────────────────────────────────────────────────────────
+ipcMain.handle('updates:check', () => updateChecker.checkForUpdates(app.getVersion()));
 
-// Al abrir la app, el renderer llama esto para saber si ya habia una carpeta
-// de assets configurada de una sesion anterior, e intentar recargarla sola.
+ipcMain.handle('updates:open-release', async (_event, url) => {
+  if (!updateChecker.isOfficialReleaseUrl(url)) {
+    console.warn('updates:open-release bloqueado — URL fuera de la whitelist:', url);
+    return false;
+  }
+  try {
+    await openExternalOriginal(url);
+    return true;
+  } catch (err) {
+    console.warn('updates:open-release falló:', err.message);
+    return false;
+  }
+});
+
 ipcMain.handle('tibia-assets:get-saved-path', () => {
   const config = readConfig();
   return config.tibiaAssetsPath || null;
@@ -222,9 +332,16 @@ ipcMain.handle('tibia-assets:load-saved', async () => {
   return tibiaAssets.loadAssets(config.tibiaAssetsPath);
 });
 
-// Abre el selector de carpetas nativo, y si la carpeta elegida (o su
-// subcarpeta "assets") contiene un catalog-content.json valido, la carga y
-// la recuerda para la proxima vez.
+ipcMain.handle('tibia-assets:auto-detect', async () => {
+  const result = await tibiaAssets.loadAssets();
+  if (result.ok) {
+    writeConfigField('tibiaAssetsPath', result.path);
+  }
+  return result;
+});
+
+ipcMain.handle('tibia-assets:get-status', () => tibiaAssets.getLoadedInfo());
+
 ipcMain.handle('tibia-assets:select-folder', async () => {
   const result = await dialog.showOpenDialog(mainWindow, {
     title: 'Selecciona la carpeta "assets" del cliente Tibia',
@@ -249,6 +366,30 @@ ipcMain.handle('tibia-assets:get-frame', (_event, lookType, options) => {
   }
 });
 
+ipcMain.handle('tibia-assets:get-item-frame', (_event, objectId, options) => {
+  try {
+    return tibiaAssets.getItemFrame(objectId, options);
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('tibia-assets:has-appearance', (_event, lookType) =>
+  tibiaAssets.hasAppearance(lookType)
+);
+
+ipcMain.handle('tibia-assets:has-object', (_event, objectId) => tibiaAssets.hasObject(objectId));
+
+ipcMain.handle('tibia-assets:download-assets', async () => {
+  try {
+    await openExternalOriginal(ASSETS_DOWNLOAD_URL);
+    return true;
+  } catch (err) {
+    console.warn('tibia-assets:download-assets fallo:', err.message);
+    return false;
+  }
+});
+
 app.on('ready', bootApp);
 
 app.on('window-all-closed', () => {
@@ -263,15 +404,11 @@ app.on('activate', () => {
   }
 });
 
-// Nunca abrir enlaces en el navegador externo del sistema, ni siquiera
-// si en el futuro se agrega algún shell.openExternal por error: se anula
-// la función a nivel de módulo dentro de este proceso.
 shell.openExternal = async () => {
   console.warn('Intento de abrir navegador externo bloqueado por configuración de NPC Maker Pro.');
   return false;
 };
 
-// Menú de la aplicación
 const template = [
   {
     label: 'File',
@@ -304,4 +441,4 @@ const template = [
 ];
 
 const menu = Menu.buildFromTemplate(template);
-Menu.setApplicationMenu(menu);
+Menu.setApplicationMenu(menu);

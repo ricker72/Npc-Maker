@@ -1,34 +1,10 @@
-// ───────────────────────────────────────────────────────────────────────────
-// tibiaAssetLoader.js
-//
-// Corre en el PROCESO PRINCIPAL de Electron (tiene acceso a Node/fs). Se
-// encarga de:
-//   1. Encontrar y leer la carpeta "assets" de un cliente Tibia moderno
-//      (12.90+, incluido 15.33): catalog-content.json + appearances-*.dat
-//      + hojas de sprites "sprites-*.bmp.lzma".
-//   2. Decodificar el protobuf de appearances.dat para saber, por cada
-//      outfit/montura (lookType), que sprite corresponde a cada
-//      combinacion de direccion/addon/montado/capa/cuadro de animacion.
-//   3. Descomprimir bajo demanda las hojas de sprites (LZMA -> BMP) y
-//      devolver, para un outfit/montura puntual, los pixeles RGBA en
-//      crudo de cada capa (plantilla gris + mascara de color) para que el
-//      renderer los coloree con canvas usando la paleta de colores del
-//      juego (src/data/colors.json), sin tener que reimplementar todo
-//      esto en el renderer.
-//
-// Todo el trabajo pesado (parseo protobuf, LZMA, BMP) vive aca para poder
-// usar dependencias node normales (protobufjs, lzma1) sin preocuparse por
-// bundling en el renderer.
-// ───────────────────────────────────────────────────────────────────────────
+'use strict';
 
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
 const protobuf = require('protobufjs');
 
-// lzma1 es un paquete solo-ESM (\"type\": \"module\") y el proceso principal de
-// Electron corre como CommonJS (Node 20 no soporta require() de ESM), asi que
-// se carga una sola vez con import() dinamico. loadAssets() espera a que este
-// listo antes de habilitar la decodificacion de hojas.
 let lzma = null;
 let lzmaModulePromise = null;
 function ensureLzmaLoaded() {
@@ -41,18 +17,14 @@ function ensureLzmaLoaded() {
   return lzmaModulePromise;
 }
 
-// ───────────────────────────── Estado del modulo ──────────────────────────
+let AppearancesType = null;
+let loadedFolder = null;
+let spriteCatalog = null;
+let outfitById = null;
+let objectById = null;
+let sheetCache = new Map();
+const SHEET_CACHE_LIMIT = 200;
 
-let AppearancesType = null; // Tipo protobuf ya cargado (se carga 1 sola vez)
-let loadedFolder = null;    // Carpeta "assets" actualmente cargada
-let catalog = null;         // Array crudo de catalog-content.json
-let spriteCatalog = null;   // Solo las entradas type:"sprite", ordenadas por firstspriteid
-let outfitById = null;      // Map<number, AppearanceDecoded> (incluye monturas, comparten namespace)
-let sheetCache = new Map(); // Map<filename, {width, height, rgba: Uint8Array}>
-const SHEET_CACHE_LIMIT = 200; // ~200 hojas * hasta 590KB = ~120MB peor caso, aceptable para app de escritorio
-
-// Tamaño de celda (px) segun el campo "spritetype" del catalogo.
-// Verificado contra hojas reales del cliente 15.33.
 const CELL_SIZE_BY_SPRITETYPE = {
   0: { w: 32, h: 32 },
   1: { w: 64, h: 64 },
@@ -67,11 +39,6 @@ async function ensureProtoLoaded() {
   AppearancesType = root.lookupType('tibia.protobuf.appearances.Appearances');
 }
 
-// ───────────────────────────── Localizar carpeta ───────────────────────────
-
-// El usuario puede seleccionar la carpeta que contiene catalog-content.json
-// directamente, o la carpeta "padre" que contiene una subcarpeta "assets"
-// (asi vienen los zips de clientes, con "assets/catalog-content.json").
 function resolveAssetsDir(candidatePath) {
   const direct = path.join(candidatePath, 'catalog-content.json');
   if (fs.existsSync(direct)) return candidatePath;
@@ -82,15 +49,46 @@ function resolveAssetsDir(candidatePath) {
   return null;
 }
 
-// ───────────────────────────── Carga principal ─────────────────────────────
+function listDirSafe(dir) {
+  try {
+    return fs.readdirSync(dir, { withFileTypes: true });
+  } catch {
+    return [];
+  }
+}
+
+function autoDetectAssetsDir() {
+  const candidates = [];
+
+  const localAppData = process.env.LOCALAPPDATA || path.join(os.homedir(), 'AppData', 'Local');
+  const appData = process.env.APPDATA || path.join(os.homedir(), 'AppData', 'Roaming');
+  const roots = [path.join(localAppData, 'Tibia'), path.join(appData, 'Tibia')];
+
+  for (const root of roots) {
+    candidates.push(path.join(root, 'assets'));
+    const packages = path.join(root, 'packages');
+    for (const entry of listDirSafe(packages)) {
+      if (!entry.isDirectory()) continue;
+      candidates.push(path.join(packages, entry.name, 'assets'));
+    }
+  }
+
+  for (const candidate of candidates) {
+    if (fs.existsSync(path.join(candidate, 'catalog-content.json'))) return candidate;
+  }
+
+  return null;
+}
+
 
 async function loadAssets(candidatePath) {
-  const assetsDir = resolveAssetsDir(candidatePath);
+  const assetsDir = candidatePath ? resolveAssetsDir(candidatePath) : autoDetectAssetsDir();
   if (!assetsDir) {
     return {
       ok: false,
+      autoDetectFailed: true,
       error:
-        'No se encontro "catalog-content.json" en esa carpeta ni en una subcarpeta "assets". ' +
+        'No se encontro la carpeta "assets" del cliente Tibia. ' +
         'Selecciona la carpeta "assets" extraida del cliente (o la carpeta que la contiene).',
     };
   }
@@ -110,25 +108,30 @@ async function loadAssets(candidatePath) {
     const appearancesBuf = fs.readFileSync(path.join(assetsDir, appearancesEntry.file));
     const decoded = AppearancesType.decode(appearancesBuf);
 
-    const map = new Map();
+    const outfits = new Map();
     for (const o of decoded.outfit) {
-      map.set(o.id, o);
+      outfits.set(o.id, o);
+    }
+
+    const objects = new Map();
+    for (const o of decoded.object) {
+      objects.set(o.id, o);
     }
 
     const sprites = parsedCatalog
       .filter((e) => e.type === 'sprite')
       .sort((a, b) => a.firstspriteid - b.firstspriteid);
 
-    // Reseteamos estado
     loadedFolder = assetsDir;
-    catalog = parsedCatalog;
     spriteCatalog = sprites;
-    outfitById = map;
+    outfitById = outfits;
+    objectById = objects;
     sheetCache = new Map();
 
     return {
       ok: true,
       path: assetsDir,
+      appearancesFile: appearancesEntry.file,
       outfitCount: decoded.outfit.length,
       objectCount: decoded.object.length,
     };
@@ -143,13 +146,18 @@ function getLoadedInfo() {
     loaded: true,
     path: loadedFolder,
     outfitCount: outfitById ? outfitById.size : 0,
+    objectCount: objectById ? objectById.size : 0,
   };
 }
 
-// ─────────────────────── Busqueda de hoja por sprite id ────────────────────
+function hasAppearance(lookType) {
+  return !!(outfitById && outfitById.get(lookType));
+}
 
-// Busqueda binaria sobre spriteCatalog (ordenado por firstspriteid) para
-// encontrar la hoja que contiene un sprite id dado.
+function hasObject(objectId) {
+  return !!(objectById && objectById.get(objectId));
+}
+
 function findSheetForSpriteId(spriteId) {
   if (!spriteCatalog) return null;
   let lo = 0;
@@ -168,19 +176,12 @@ function findSheetForSpriteId(spriteId) {
   return null;
 }
 
-// ───────────────────────── Decodificacion de hojas ─────────────────────────
-
-// Los .bmp.lzma de Tibia llevan: 32 bytes de cabecera propia (se descartan)
-// + una cabecera LZMA "alone" de 13 bytes cuyo campo de tamaño (8 bytes) no
-// es confiable, seguida del stream LZMA1 crudo. Reconstruimos una cabecera
-// "alone" estandar (tamaño desconocido = 0xFF*8) para poder usar cualquier
-// decodificador LZMA1 estandar sin tener que hablar en modo "raw"/filters.
 function decompressSpriteSheetLzma(buf) {
   if (!lzma) {
     throw new Error('El decodificador LZMA no esta cargado (fallo ensureLzmaLoaded).');
   }
   const body = buf.subarray(32);
-  const propsAndDictSize = body.subarray(0, 5); // 1 byte props + 4 bytes dict size (LE)
+  const propsAndDictSize = body.subarray(0, 5);
   const unknownSizeMarker = Buffer.alloc(8, 0xff);
   const compressedStream = body.subarray(13);
   const synthetic = Buffer.concat([propsAndDictSize, unknownSizeMarker, compressedStream]);
@@ -188,8 +189,6 @@ function decompressSpriteSheetLzma(buf) {
   return Buffer.from(out);
 }
 
-// Parser minimo de BMP de 32bpp (BITMAPV4HEADER, BI_BITFIELDS), que es el
-// unico formato que usan estos archivos. Devuelve RGBA top-down.
 function parseBmp32(bmpBuf) {
   if (bmpBuf[0] !== 0x42 || bmpBuf[1] !== 0x4d) {
     throw new Error('Archivo BMP invalido (falta firma "BM").');
@@ -213,7 +212,6 @@ function parseBmp32(bmpBuf) {
     for (let x = 0; x < width; x++) {
       const s = srcOffset + x * 4;
       const d = dstOffset + x * 4;
-      // Almacenado como BGRA en memoria (little-endian de 0xAARRGGBB)
       const b = bmpBuf[s];
       const g = bmpBuf[s + 1];
       const r = bmpBuf[s + 2];
@@ -244,7 +242,6 @@ function getDecodedSheet(filename) {
   return decoded;
 }
 
-// Recorta el tile de un sprite id puntual de su hoja, como RGBA plano.
 function getSpriteTile(spriteId) {
   const sheetEntry = findSheetForSpriteId(spriteId);
   if (!sheetEntry) return null;
@@ -269,32 +266,19 @@ function getSpriteTile(spriteId) {
   return { width: cell.w, height: cell.h, rgba: out };
 }
 
-// ────────────────────────── Consulta de apariencias ────────────────────────
-
-// index = ((((frame*depth + z) * height + y) * width + x) * layers + layer)
-// Formula verificada contra appearances.dat real (outfit 128 "Citizen" y
-// varias monturas del archivo mounts.json).
 function spriteIndex({ frame, z, y, x, layer, width, height, depth, layers }) {
   return ((((frame * depth + z) * height + y) * width + x) * layers + layer);
 }
 
-// Devuelve info + las capas (tiles RGBA) de UN cuadro puntual de un
-// outfit/montura (lookType). "group" es 'idle' o 'moving'. patternY es el
-// indice de addon (0=base,1=addon1,2=addon2). z es 0 (normal) o 1 (montado),
-// si el outfit tiene esa pose (patternDepth=2).
-function getAppearanceFrame(lookType, { group = 'idle', direction = 2, patternY = 0, z = 0, phase = 0 } = {}) {
-  if (!outfitById) return { ok: false, error: 'No hay assets cargados.' };
-  const appearance = outfitById.get(lookType);
-  if (!appearance) return { ok: false, error: `lookType ${lookType} no existe en appearances.dat.` };
+function pickFrameGroup(appearance, wantedFixed) {
+  if (!appearance || !appearance.frameGroup || !appearance.frameGroup.length) return null;
+  let group = appearance.frameGroup.find((f) => f.fixedFrameGroup === wantedFixed);
+  if (!group) group = appearance.frameGroup[0];
+  if (!group || !group.spriteInfo) return null;
+  return group;
+}
 
-  const wantedFixed = group === 'moving' ? 1 : 0;
-  let frameGroup = appearance.frameGroup.find((f) => f.fixedFrameGroup === wantedFixed);
-  if (!frameGroup) frameGroup = appearance.frameGroup[0];
-  if (!frameGroup || !frameGroup.spriteInfo) {
-    return { ok: false, error: `lookType ${lookType} no tiene sprite_info para el grupo ${group}.` };
-  }
-
-  const si = frameGroup.spriteInfo;
+function extractLayers(si, { frame = 0, z = 0, y = 0, x = 0 } = {}) {
   const width = si.patternWidth || 1;
   const height = si.patternHeight || 1;
   const depth = si.patternDepth || 1;
@@ -302,10 +286,10 @@ function getAppearanceFrame(lookType, { group = 'idle', direction = 2, patternY 
   const total = si.spriteId.length;
   const frameCount = total / (width * height * depth * layers) || 1;
 
-  const safeX = direction % width;
-  const safeY = Math.min(patternY, height - 1);
+  const safeX = x % width;
+  const safeY = Math.min(y, height - 1);
   const safeZ = Math.min(z, depth - 1);
-  const safeFrame = Math.floor(phase) % frameCount;
+  const safeFrame = Math.floor(frame) % frameCount;
 
   const layerTiles = [];
   for (let layer = 0; layer < layers; layer++) {
@@ -318,14 +302,55 @@ function getAppearanceFrame(lookType, { group = 'idle', direction = 2, patternY 
     layerTiles.push(getSpriteTile(spriteId));
   }
 
+  return { layerTiles, frameCount, width, height, depth, layers };
+}
+
+function getAppearanceFrame(lookType, { group = 'idle', direction = 2, patternY = 0, z = 0, phase = 0 } = {}) {
+  if (!outfitById) return { ok: false, error: 'No hay assets cargados.' };
+  const appearance = outfitById.get(lookType);
+  if (!appearance) {
+    return { ok: false, missing: true, error: `lookType ${lookType} no existe en appearances.dat.` };
+  }
+
+  const wantedFixed = group === 'moving' ? 1 : 0;
+  const frameGroup = pickFrameGroup(appearance, wantedFixed);
+  if (!frameGroup) {
+    return { ok: false, error: `lookType ${lookType} no tiene sprite_info para el grupo ${group}.` };
+  }
+
+  const extracted = extractLayers(frameGroup.spriteInfo, { frame: phase, z, y: patternY, x: direction });
+
   return {
     ok: true,
-    width: layerTiles[0] ? layerTiles[0].width : 0,
-    height: layerTiles[0] ? layerTiles[0].height : 0,
-    layers: layerTiles, // [{width,height,rgba}, ...] - longitud 1 (fijo) o 2 (coloreable: [plantilla, mascara])
-    frameCount,
-    hasAddons: height > 1, // patternHeight>1 -> soporta addon1/addon2
-    hasMountPose: depth > 1, // patternDepth>1 -> tiene pose "montado"
+    width: extracted.layerTiles[0] ? extracted.layerTiles[0].width : 0,
+    height: extracted.layerTiles[0] ? extracted.layerTiles[0].height : 0,
+    layers: extracted.layerTiles,
+    frameCount: extracted.frameCount,
+    hasAddons: extracted.height > 1,
+    hasMountPose: extracted.depth > 1,
+  };
+}
+
+function getItemFrame(objectId, { frame = 0 } = {}) {
+  if (!objectById) return { ok: false, error: 'No hay assets cargados.' };
+  const object = objectById.get(objectId);
+  if (!object) {
+    return { ok: false, missing: true, error: `item ${objectId} no existe en appearances.dat.` };
+  }
+
+  const frameGroup = pickFrameGroup(object, 0);
+  if (!frameGroup) {
+    return { ok: false, error: `item ${objectId} no tiene sprite_info.` };
+  }
+
+  const extracted = extractLayers(frameGroup.spriteInfo, { frame });
+
+  return {
+    ok: true,
+    width: extracted.layerTiles[0] ? extracted.layerTiles[0].width : 0,
+    height: extracted.layerTiles[0] ? extracted.layerTiles[0].height : 0,
+    layers: extracted.layerTiles,
+    frameCount: extracted.frameCount,
   };
 }
 
@@ -333,4 +358,9 @@ module.exports = {
   loadAssets,
   getLoadedInfo,
   getAppearanceFrame,
+  getItemFrame,
+  hasAppearance,
+  hasObject,
+  autoDetectAssetsDir,
 };
+

@@ -1,9 +1,13 @@
 import React, { useState, useMemo } from 'react';
 import itemsData from './data/items.json';
+import npcPrices from './data/npcPrices.json';
 import { useTranslation } from './i18n/LanguageContext';
+import { useTibiaAssets } from './tibia/TibiaAssetsContext';
+import { TibiaItemSprite, AssetsMissingNotice } from './TibiaOutfitCanvas';
 
 const ItemPicker = ({ onAdd, label }) => {
   const { t } = useTranslation();
+  const { status, selectFolder } = useTibiaAssets();
   const buttonLabel = label || t('shop.addToShop');
 
   const [search, setSearch] = useState('');
@@ -22,11 +26,20 @@ const ItemPicker = ({ onAdd, label }) => {
       .slice(0, 12);
   }, [search]);
 
+  const getOfficialPrice = (item) => (item ? npcPrices[String(item.id)] || null : null);
+  const officialPrice = getOfficialPrice(selectedItem);
+
   const selectItem = (item) => {
     setSelectedItem(item);
     setSearch(`${item.name} (#${item.id})`);
     setShowSuggestions(false);
     setNotice(null);
+
+    const official = getOfficialPrice(item);
+    if (official) {
+      if (!buyPrice && official[0] > 0) setBuyPrice(String(official[0]));
+      if (!sellPrice && official[1] > 0) setSellPrice(String(official[1]));
+    }
   };
 
   const handleAdd = () => {
@@ -77,6 +90,7 @@ const ItemPicker = ({ onAdd, label }) => {
                 className="suggestion-row"
                 onClick={() => selectItem(it)}
               >
+                <TibiaItemSprite objectId={it.id} size={24} className="shop-item-thumb" />
                 <span>{it.name}</span>
                 <span className="suggestion-id">#{it.id}</span>
               </div>
@@ -84,6 +98,18 @@ const ItemPicker = ({ onAdd, label }) => {
           </div>
         )}
       </div>
+
+      {selectedItem && (
+        <div className="item-picker-selected">
+          <TibiaItemSprite objectId={selectedItem.id} size={48} className="shop-item-thumb-lg" />
+          <div className="item-picker-selected-info">
+            <strong>{selectedItem.name}</strong>
+            <small>#{selectedItem.id}</small>
+          </div>
+        </div>
+      )}
+
+      {!status.loaded && <AssetsMissingNotice compact onSelectFolder={selectFolder} />}
 
       <div className="item-picker-fields">
         <div className="form-group">
@@ -118,6 +144,14 @@ const ItemPicker = ({ onAdd, label }) => {
         </div>
         <button className="btn btn-gold-sm" onClick={handleAdd}>➕ {buttonLabel}</button>
       </div>
+      {officialPrice && (
+        <div className="inline-notice info">
+          💰 {t('shop.officialNpcPrice')}
+          {officialPrice[0] > 0 ? ` · ${t('shop.buy')}: ${officialPrice[0]} gp` : ''}
+          {officialPrice[1] > 0 ? ` · ${t('shop.sell')}: ${officialPrice[1]} gp` : ''}
+          {officialPrice[2] ? ` — ${officialPrice[2]}${officialPrice[3] ? ` (${officialPrice[3]})` : ''}` : ''}
+        </div>
+      )}
       {notice && <div className={`inline-notice ${notice.type}`}>{notice.text}</div>}
     </div>
   );

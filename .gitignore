@@ -4,3 +4,7 @@
 .env.local
 npm-debug.log*
 .DS_Store
+/.cache
+/build.log
+/build-react.log
+/tools/release/generated

@@ -2,6 +2,7 @@ import React, { useState, useRef, useMemo } from 'react';
 import './App.css';
 import OutfitSelector from './OutfitSelector';
 import ItemPicker from './ItemPicker';
+import ItemPalette from './ItemPalette';
 import ScriptCreator from './ScriptCreator';
 import MonsterEditor from './MonsterEditor';
 import PrivacyPolicy from './PrivacyPolicy';
@@ -9,6 +10,8 @@ import { generateNpcLua, getNpcFileName } from './luaGenerator';
 import { useTranslation } from './i18n/LanguageContext';
 import LanguageSelector from './i18n/LanguageSelector';
 import LanguageSwitcher from './i18n/LanguageSwitcher';
+import UpdateBanner from './UpdateBanner';
+import { TibiaItemSprite } from './TibiaOutfitCanvas';
 
 const DEFAULT_NPC = {
   name: '',
@@ -39,10 +42,6 @@ const DEFAULT_NPC = {
   keywords: []
 };
 
-// Pequeño aviso inline no bloqueante (reemplaza a window.alert()).
-// En Electron, alert() puede dejar la ventana en un estado donde el foco del
-// teclado no vuelve correctamente a los inputs de texto — por eso nunca se
-// usa alert()/confirm() en esta app.
 const InlineNotice = ({ notice }) => {
   if (!notice) return null;
   return <div className={`inline-notice ${notice.type}`}>{notice.text}</div>;
@@ -86,6 +85,13 @@ const App = () => {
     setNpc((prev) => ({
       ...prev,
       shop: { items: prev.shop.items.filter((it) => it.uid !== uid) }
+    }));
+  };
+
+  const removeShopItemById = (id) => {
+    setNpc((prev) => ({
+      ...prev,
+      shop: { items: prev.shop.items.filter((it) => it.id !== id) }
     }));
   };
 
@@ -185,6 +191,9 @@ const App = () => {
         </div>
         <InlineNotice notice={importNotice} />
       </header>
+
+      {}
+      <UpdateBanner />
 
       <div className="main-content">
         <nav className="sidebar">
@@ -357,7 +366,19 @@ const App = () => {
             <div className="section">
               <h2 className="section-title">{t('shop.title')}</h2>
               <p className="section-hint">{t('shop.hint')}</p>
-              <ItemPicker onAdd={addShopItem} label={t('shop.addToShop')} />
+
+              <ItemPalette
+                shopItems={npc.shop.items}
+                onAdd={addShopItem}
+                onRemove={removeShopItemById}
+              />
+
+              <details className="shop-manual-add">
+                <summary>🔎 {t('shop.manualSearchTitle')}</summary>
+                <div className="shop-manual-add-body">
+                  <ItemPicker onAdd={addShopItem} label={t('shop.addToShop')} />
+                </div>
+              </details>
 
               <div className="items-list" style={{ marginTop: '20px' }}>
                 {npc.shop.items.length === 0 ? (
@@ -368,6 +389,7 @@ const App = () => {
                 ) : (
                   npc.shop.items.map((item) => (
                     <div key={item.uid} className="shop-item-row">
+                      <TibiaItemSprite objectId={item.id} size={24} className="shop-item-thumb" />
                       <span className="shop-item-name">{item.name}</span>
                       <span className="shop-item-id">#{item.id}</span>
                       {item.buy !== '' && <span className="shop-item-tag buy">{t('shop.buy')}: {item.buy}</span>}

@@ -23,7 +23,6 @@ function detectDefaultLanguage() {
   return 'en';
 }
 
-// Recorre el diccionario con una ruta tipo "shop.title"
 function resolvePath(dict, path) {
   return path.split('.').reduce((acc, key) => (acc && acc[key] !== undefined ? acc[key] : undefined), dict);
 }
@@ -41,15 +40,16 @@ export const LanguageProvider = ({ children }) => {
     setHasChosenLanguage(true);
   }, []);
 
-  // t('shop.title') -> string traducido. Si falta la clave, cae a inglés,
-  // y si tampoco existe ahí, devuelve la clave misma (nunca rompe la UI).
   const t = useCallback(
-    (path) => {
+    (path, vars) => {
       const dict = DICTIONARIES[language] || DICTIONARIES.en;
-      const value = resolvePath(dict, path);
-      if (value !== undefined) return value;
-      const fallback = resolvePath(DICTIONARIES.en, path);
-      return fallback !== undefined ? fallback : path;
+      let value = resolvePath(dict, path);
+      if (value === undefined) value = resolvePath(DICTIONARIES.en, path);
+      if (value === undefined) return path;
+      if (!vars || typeof value !== 'string') return value;
+      return value.replace(/\{(\w+)\}/g, (match, key) =>
+        Object.prototype.hasOwnProperty.call(vars, key) ? String(vars[key]) : match
+      );
     },
     [language]
   );

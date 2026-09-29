@@ -1,20 +1,3 @@
-// ───────────────────────────────────────────────────────────────────────────
-// spriteCompositor.js
-//
-// Corre en el RENDERER. Toma las capas crudas (plantilla en gris + máscara
-// de color) que devuelve window.tibiaAssets.getFrame(...) y las convierte en
-// ImageData ya coloreadas con la paleta del juego (src/data/colors.json),
-// para dibujarlas en un <canvas>.
-//
-// Algoritmo de coloreado verificado visualmente contra sprites reales del
-// cliente 15.33: cada pixel de la mascara es uno de 4 colores de referencia
-// (amarillo=cabeza, rojo=cuerpo, verde=piernas, azul=pies). El pixel final
-// se obtiene multiplicando, canal por canal, el pixel de la plantilla (que
-// solo aporta sombreado/luz en escala de grises) por el color de la paleta
-// elegido para esa región (mismo algoritmo que usan los generadores de
-// imagenes de outfits de la comunidad OpenTibia).
-// ───────────────────────────────────────────────────────────────────────────
-
 const REGION_REFERENCE_COLORS = {
   head: [255, 255, 0],
   body: [255, 0, 0],
@@ -23,11 +6,6 @@ const REGION_REFERENCE_COLORS = {
 };
 const WHITE = [255, 255, 255];
 
-// Umbral de distancia (al cuadrado, en espacio RGB) para considerar que un
-// pixel de mascara "es" uno de los 4 colores de referencia. Verificado
-// empiricamente contra mascaras reales (los colores puros no dejan dudas,
-// asi que el umbral solo importa para evitar falsos positivos en bordes con
-// antialiasing).
 const REGION_MATCH_THRESHOLD_SQ = 3000;
 
 function distSq(a, b) {
@@ -37,18 +15,12 @@ function distSq(a, b) {
   return dr * dr + dg * dg + db * db;
 }
 
-// Convierte un tile crudo (desde IPC: {width,height,rgba}) en un objeto
-// {width,height,data:Uint8ClampedArray} listo para ImageData. Acepta tanto
-// Uint8Array como Buffer serializado (Electron IPC preserva typed arrays).
 function toRgbaArray(tile) {
   return tile.rgba instanceof Uint8ClampedArray
     ? tile.rgba
     : new Uint8ClampedArray(tile.rgba);
 }
 
-// tile: { width, height, layers: [templateTile, maskTile?] } (formato que
-// devuelve getAppearanceFrame en el proceso principal).
-// colors: { head:{r,g,b}, body:{r,g,b}, legs:{r,g,b}, feet:{r,g,b} }
 export function colorizeTile(frame, colors) {
   const { width, height, layers } = frame;
   if (!layers || !layers[0]) return null;
@@ -59,8 +31,6 @@ export function colorizeTile(frame, colors) {
   const out = new Uint8ClampedArray(width * height * 4);
 
   if (!mask) {
-    // Sprite de un solo color fijo (monturas, efectos, etc.): se dibuja tal
-    // cual, sin recolorear.
     out.set(tpl);
     return new ImageData(out, width, height);
   }
@@ -108,10 +78,24 @@ export function colorizeTile(frame, colors) {
   return new ImageData(out, width, height);
 }
 
-// Dibuja un frame (ya coloreado o de color fijo) en un contexto 2D, en la
-// posicion (dx,dy) con el tamaño destino (dw,dh). Usa un canvas intermedio
-// porque putImageData no respeta transformaciones ni escalado.
 const scratchCanvas = document.createElement('canvas');
+
+export function fitToBox(frames, size) {
+  const valid = frames.filter((f) => f && f.ok && f.width > 0 && f.height > 0);
+  if (valid.length === 0) return null;
+
+  const boxW = Math.max(...valid.map((f) => f.width));
+  const boxH = Math.max(...valid.map((f) => f.height));
+
+  const scale = size / Math.max(boxW, boxH);
+
+  return {
+    frames: valid,
+    scale,
+    dx: Math.round((size - boxW * scale) / 2),
+    dy: Math.round((size - boxH * scale) / 2),
+  };
+}
 
 export function drawFrame(ctx, frame, colors, dx, dy, dw, dh) {
   const imageData = colorizeTile(frame, colors);

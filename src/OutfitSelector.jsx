@@ -2,12 +2,15 @@ import React, { useState, useMemo, useEffect } from 'react';
 import outfitsData from './data/outfits.json';
 import colorsData from './data/colors.json';
 import mountsData from './data/mounts.json';
-import { buildOutfitImageUrl } from './luaGenerator';
 import { useTranslation } from './i18n/LanguageContext';
-import TibiaOutfitCanvas, { DIRECTION_LABELS } from './TibiaOutfitCanvas';
+import { useTibiaAssets } from './tibia/TibiaAssetsContext';
+import TibiaOutfitCanvas, { DIRECTION_LABELS, TibiaLookSprite, AssetsMissingNotice } from './TibiaOutfitCanvas';
 
-const OutfitSelector = ({ outfit, onChange }) => {
+const OutfitSelector = ({ outfit, onChange, onLookMissing }) => {
   const { t } = useTranslation();
+  const { status, selectFolder, retry } = useTibiaAssets();
+  const [lookMissing, setLookMissing] = useState(false);
+  const [mountMissing, setMountMissing] = useState(false);
 
   const SUB_PANELS = [
     { key: 'looktype', label: `🎨 ${t('appearance.tabLooktype')}` },
@@ -21,49 +24,8 @@ const OutfitSelector = ({ outfit, onChange }) => {
   const [outfitSearch, setOutfitSearch] = useState('');
   const [mountSearch, setMountSearch] = useState('');
   const [mountEnabled, setMountEnabled] = useState(!!outfit.lookMount);
-  const [imgError, setImgError] = useState(false);
-
-  // Estado de los assets reales del cliente (outfits/monturas con sprites
-  // propios en vez del servicio externo). Solo existe window.tibiaAssets
-  // dentro de la app de Electron (no en el modo dev de navegador suelto).
-  const hasTibiaAssetsApi = typeof window !== 'undefined' && !!window.tibiaAssets;
-  const [assetsStatus, setAssetsStatus] = useState({ loading: hasTibiaAssetsApi, loaded: false, error: null, outfitCount: 0 });
-  const [previewDirection, setPreviewDirection] = useState(2); // Sur (frente), por defecto
+  const [previewDirection, setPreviewDirection] = useState(2);
   const [previewAnimate, setPreviewAnimate] = useState(false);
-
-  useEffect(() => {
-    if (!hasTibiaAssetsApi) return;
-    let cancelled = false;
-    (async () => {
-      const savedPath = await window.tibiaAssets.getSavedPath();
-      if (!savedPath) {
-        if (!cancelled) setAssetsStatus({ loading: false, loaded: false, error: null, outfitCount: 0 });
-        return;
-      }
-      const result = await window.tibiaAssets.loadSaved();
-      if (cancelled) return;
-      if (result.ok) {
-        setAssetsStatus({ loading: false, loaded: true, error: null, outfitCount: result.outfitCount });
-      } else {
-        setAssetsStatus({ loading: false, loaded: false, error: result.error, outfitCount: 0 });
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [hasTibiaAssetsApi]);
-
-  const handleSelectAssetsFolder = async () => {
-    setAssetsStatus((s) => ({ ...s, loading: true }));
-    const result = await window.tibiaAssets.selectFolder();
-    if (result.canceled) {
-      setAssetsStatus((s) => ({ ...s, loading: false }));
-      return;
-    }
-    if (result.ok) {
-      setAssetsStatus({ loading: false, loaded: true, error: null, outfitCount: result.outfitCount });
-    } else {
-      setAssetsStatus({ loading: false, loaded: false, error: result.error, outfitCount: 0 });
-    }
-  };
 
   const filteredOutfits = useMemo(() => {
     return outfitsData
@@ -71,26 +33,13 @@ const OutfitSelector = ({ outfit, onChange }) => {
       .filter((o) => o.name.toLowerCase().includes(outfitSearch.toLowerCase()));
   }, [gender, outfitSearch]);
 
-  // Lista COMPLETA de mounts (231), solo filtrada por el buscador. Sin recortes.
   const filteredMounts = useMemo(() => {
     return mountsData.filter((m) => m.name.toLowerCase().includes(mountSearch.toLowerCase()));
   }, [mountSearch]);
 
-  const imgUrl = useMemo(() => buildOutfitImageUrl(outfit), [outfit]);
-
-  // Cada vez que cambia la URL (cambió el outfit), se vuelve a intentar
-  // cargar la imagen. Sin esto, una vez que falla una carga, el <img> queda
-  // desmontado para siempre y nunca se vuelve a probar, aunque el looktype
-  // cambie después a uno válido (ej. bajar a 0 y luego subir de nuevo).
-  useEffect(() => {
-    setImgError(false);
-  }, [imgUrl]);
-
   const handleGenderChange = (newGender) => {
     setGender(newGender);
 
-    // Buscar el outfit actual (por nombre) y seleccionar automáticamente
-    // su equivalente en el género nuevo, para que el looktype cambie solo.
     const currentOutfitEntry = outfitsData.find((o) => o.lookType === outfit.lookType);
     if (currentOutfitEntry) {
       const equivalent = outfitsData.find(
@@ -164,31 +113,27 @@ const OutfitSelector = ({ outfit, onChange }) => {
     return colorsData.find((c) => c.id === id) || colorsData[0];
   };
 
+  useEffect(() => {
+    setLookMissing(false);
+    setMountMissing(false);
+  }, [outfit.lookType, outfit.lookMount, status.loaded]);
+
+  useEffect(() => {
+    if (onLookMissing) onLookMissing(lookMissing);
+  }, [lookMissing, onLookMissing]);
+
   return (
     <div className="outfit-selector">
-      {/* Preview (siempre visible, sin importar el sub-panel activo) */}
       <div className="outfit-preview-panel">
         <div className="character-viewer">
-          {assetsStatus.loaded ? (
-            <TibiaOutfitCanvas outfit={outfit} direction={previewDirection} animate={previewAnimate} size={192} />
-          ) : !imgError ? (
-            <img
-              src={imgUrl}
-              alt="NPC outfit preview"
-              className="character-sprite"
-              onError={() => setImgError(true)}
-              onLoad={() => setImgError(false)}
-            />
+          {status.loaded && !lookMissing && !mountMissing ? (
+            <TibiaOutfitCanvas outfit={outfit} direction={previewDirection} animate={previewAnimate} size={192} onMissing={setLookMissing} />
           ) : (
-            <div className="sprite-fallback">
-              <span className="sprite-fallback-icon">👤</span>
-              <p>{t('appearance.previewUnavailable')}</p>
-              <small>{t('appearance.previewUnavailableHint')}</small>
-            </div>
+            <AssetsMissingNotice reason={lookMissing ? t('assets.lookMissing') : undefined} onSelectFolder={selectFolder} />
           )}
         </div>
 
-        {assetsStatus.loaded && (
+        {status.loaded && (
           <div className="outfit-preview-controls">
             <div className="direction-picker">
               {DIRECTION_LABELS.map((label, dirIndex) => (
@@ -213,22 +158,22 @@ const OutfitSelector = ({ outfit, onChange }) => {
           </div>
         )}
 
-        {hasTibiaAssetsApi && (
-          <div className="tibia-assets-panel">
-            {assetsStatus.loaded ? (
+        <div className="tibia-assets-panel">
+          {status.loaded ? (
+            <>
               <span className="outfit-meta-pill">
-                ✅ Assets del cliente cargados ({assetsStatus.outfitCount} outfits/monturas)
+                ✅ {t('assets.loaded')} ({status.outfitCount} · {status.objectCount})
               </span>
-            ) : (
-              <>
-                <button className="btn btn-gold-sm" onClick={handleSelectAssetsFolder} disabled={assetsStatus.loading}>
-                  📁 {assetsStatus.loading ? 'Cargando…' : 'Cargar carpeta "assets" del cliente'}
-                </button>
-                {assetsStatus.error && <small className="tibia-assets-error">{assetsStatus.error}</small>}
-              </>
-            )}
-          </div>
-        )}
+              <button className="btn btn-gold-sm" onClick={selectFolder} disabled={status.loading}>
+                📁 {t('assets.changeFolder')}
+              </button>
+            </>
+          ) : (
+            <button className="btn btn-gold-sm" onClick={status.error ? retry : selectFolder} disabled={status.loading}>
+              📁 {status.loading ? t('assets.loading') : t('assets.selectFolder')}
+            </button>
+          )}
+        </div>
         <div className="outfit-meta">
           <span className="outfit-meta-pill">{t('appearance.look')}: {outfit.lookType}</span>
           <span className="outfit-meta-pill">{t('appearance.addons')}: {outfit.lookAddons}</span>
@@ -240,7 +185,7 @@ const OutfitSelector = ({ outfit, onChange }) => {
         </div>
       </div>
 
-      {/* Controles divididos en 3 sub-paneles */}
+      {}
       <div className="outfit-controls-panel">
         <div className="sub-panel-tabs">
           {SUB_PANELS.map((p) => (
@@ -254,7 +199,7 @@ const OutfitSelector = ({ outfit, onChange }) => {
           ))}
         </div>
 
-        {/* ───────── PANEL 1: Looktype & Colores ───────── */}
+        {}
         {subPanel === 'looktype' && (
           <div className="outfit-block">
             <h4>{t('appearance.looktypeTitle')}</h4>
@@ -297,7 +242,7 @@ const OutfitSelector = ({ outfit, onChange }) => {
           </div>
         )}
 
-        {/* ───────── PANEL 2: Outfits & Mounts ───────── */}
+        {}
         {subPanel === 'outfitsmounts' && (
           <>
             <div className="outfit-block">
@@ -330,6 +275,7 @@ const OutfitSelector = ({ outfit, onChange }) => {
                     className={`outfit-list-item ${outfit.lookType === o.lookType ? 'selected' : ''}`}
                     onClick={() => handleSelectOutfit(o.lookType)}
                   >
+                    <TibiaLookSprite lookType={o.lookType} size={32} className="outfit-list-thumb" />
                     <span className="outfit-list-name">{o.name}</span>
                     <span className="outfit-list-id">#{o.lookType}</span>
                   </div>
@@ -369,6 +315,7 @@ const OutfitSelector = ({ outfit, onChange }) => {
                         className={`outfit-list-item ${outfit.lookMount === m.clientId ? 'selected' : ''}`}
                         onClick={() => handleSelectMount(m.clientId)}
                       >
+                        <TibiaLookSprite lookType={m.clientId} size={32} className="outfit-list-thumb" />
                         <span className="outfit-list-name">{m.name}</span>
                         <span className="outfit-list-id">#{m.clientId}</span>
                       </div>
@@ -383,7 +330,7 @@ const OutfitSelector = ({ outfit, onChange }) => {
           </>
         )}
 
-        {/* ───────── PANEL 3: Addons ───────── */}
+        {}
         {subPanel === 'addons' && (
           <div className="outfit-block">
             <h4>{t('appearance.addonsTitle')}</h4>

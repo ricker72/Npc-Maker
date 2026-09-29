@@ -2,9 +2,10 @@ import React, { useState, useMemo } from 'react';
 import { callAI, extractLuaCode } from './aiClient';
 import { DEFAULT_AI_ENDPOINT, DEFAULT_AI_MODEL } from './secureConfig';
 import { CRYSTAL_SERVER_SYSTEM_PROMPT, SCRIPT_TYPES_KEYS } from './crystalServerKnowledge';
-import { buildOutfitImageUrl } from './luaGenerator';
 import colorsData from './data/colors.json';
 import { useTranslation } from './i18n/LanguageContext';
+import { useTibiaAssets } from './tibia/TibiaAssetsContext';
+import TibiaOutfitCanvas, { AssetsMissingNotice } from './TibiaOutfitCanvas';
 
 function buildNpcContextSummary(npc) {
   const o = npc.outfit;
@@ -29,10 +30,8 @@ ${keywordList}`;
 
 const NpcContextPanel = ({ npc }) => {
   const { t } = useTranslation();
-  const [imgError, setImgError] = useState(false);
-  const imgUrl = useMemo(() => buildOutfitImageUrl(npc.outfit), [npc.outfit]);
-
-  React.useEffect(() => { setImgError(false); }, [imgUrl]);
+  const { status, selectFolder } = useTibiaAssets();
+  const [lookMissing, setLookMissing] = useState(false);
 
   const colorOf = (id) => colorsData.find((c) => c.id === id) || colorsData[0];
 
@@ -47,16 +46,10 @@ const NpcContextPanel = ({ npc }) => {
       </div>
 
       <div className="npc-context-sprite-centered">
-        {!imgError ? (
-          <img
-            src={imgUrl}
-            alt="preview"
-            className="character-sprite-lg"
-            onError={() => setImgError(true)}
-            onLoad={() => setImgError(false)}
-          />
+        {status.loaded && !lookMissing ? (
+          <TibiaOutfitCanvas outfit={npc.outfit} direction={2} size={140} onMissing={setLookMissing} />
         ) : (
-          <span className="sprite-fallback-icon-lg">👤</span>
+          <AssetsMissingNotice compact reason={lookMissing ? t('assets.lookMissing') : undefined} onSelectFolder={selectFolder} />
         )}
       </div>
 
@@ -255,7 +248,7 @@ Responde con el código Lua completo dentro de un bloque \`\`\`lua, y antes del 
         </select>
       </div>
 
-      {/* Panel único: preview a la izquierda, prompt a la derecha */}
+      {}
       <div className="script-creator-two-col">
         <div className="script-creator-col-left">
           {useNpcContext ? (

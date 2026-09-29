@@ -1,6 +1,3 @@
-// monsterLuaGenerator.js
-// Genera scripts Lua de monstruos 100% compatibles con el formato real de
-// CrystalServer (Game.createMonsterType + tabla monster + mType:register).
 
 const escapeLua = (str = '') => String(str).replace(/\\/g, '\\\\').replace(/"/g, '\\"');
 const sanitizeName = (name) => (name || 'unnamed_monster').replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
@@ -89,11 +86,9 @@ export function generateMonsterLua(monster) {
       if (a.range) parts.push(`range = ${fmtNum(a.range)}`);
       if (a.radius) parts.push(`radius = ${fmtNum(a.radius)}`);
       if (a.target) parts.push('target = true');
-      // Ataques tipo "speed" (paralyze/slow): speedChange/effect/duration
       if (a.speedChange) parts.push(`speedChange = ${fmtNum(a.speedChange)}`);
       if (a.effect) parts.push(`effect = ${a.effect}`);
       if (a.duration) parts.push(`duration = ${fmtNum(a.duration)}`);
-      // Daño continuo (DoT): condition = { type = CONDITION_X, totalDamage, interval }
       if (a.condition?.type) {
         parts.push(`condition = { type = ${a.condition.type}, totalDamage = ${fmtNum(a.condition.totalDamage)}, interval = ${fmtNum(a.condition.interval)} }`);
       }
@@ -144,18 +139,6 @@ export function getMonsterFileName(name) {
   return `${sanitizeName(name)}.lua`;
 }
 
-// ─────────────────────────────────────────────────────────────────────────
-// Parser "completo" (basado en regex + conteo de llaves, no es un parser
-// Lua real, pero cubre con fidelidad la estructura que genera esta misma
-// app y la que usan los monstruos reales de CrystalServer/Canary).
-// ─────────────────────────────────────────────────────────────────────────
-
-// Devuelve el contenido interno (sin las llaves externas) del bloque
-// "monster.KEY = { ... }", manejando correctamente llaves anidadas
-// (por ejemplo el sub-bloque "condition = {...}" dentro de un ataque).
-// Devuelve el contenido interno (sin llaves externas) del bloque "KEY = {...}"
-// dentro de un texto arbitrario (no requiere el prefijo "monster."), usando
-// conteo de llaves para soportar anidamiento.
 function extractSubBlock(text, key) {
   const marker = new RegExp(`\\b${key}\\s*=\\s*\\{`);
   const m = text.match(marker);
@@ -189,8 +172,6 @@ function extractBlock(luaText, key) {
   return null;
 }
 
-// Divide el contenido de un bloque en sus entradas { ... } de primer nivel,
-// respetando llaves anidadas (necesario para attacks con condition).
 function splitTopLevelEntries(blockContent) {
   if (!blockContent) return [];
   const entries = [];
@@ -236,7 +217,6 @@ function topLevelScalar(luaText, name, type = 'number') {
 export function parseMonsterLuaFull(luaText) {
   const basic = parseMonsterLuaBasic(luaText);
 
-  // Outfit
   const outfitBlock = extractBlock(luaText, 'outfit') || '';
   const outfit = {
     lookType: field(outfitBlock, 'lookType') ?? basic.lookType,
@@ -248,7 +228,6 @@ export function parseMonsterLuaFull(luaText) {
     lookMount: field(outfitBlock, 'lookMount') ?? 0
   };
 
-  // Flags (pares clave=valor separados por comas, sin llaves anidadas)
   const flagsBlock = extractBlock(luaText, 'flags') || '';
   const flags = {};
   flagsBlock.split(',').forEach((pair) => {
@@ -256,9 +235,6 @@ export function parseMonsterLuaFull(luaText) {
     if (m) flags[m[1]] = m[2] === 'true' ? true : m[2] === 'false' ? false : parseInt(m[2], 10);
   });
 
-  // Defenses (puede incluir, además de defense/armor/mitigation, entradas
-  // de hechizos defensivos/auto-buff con la misma forma que un ataque, ej.
-  // un "speed" que el monstruo se lanza a sí mismo).
   const defensesBlock = extractBlock(luaText, 'defenses') || '';
   const defenses = {
     defense: field(defensesBlock, 'defense') ?? 0,
@@ -278,21 +254,18 @@ export function parseMonsterLuaFull(luaText) {
     target: field(entry, 'target', 'bool') ?? false
   }));
 
-  // Elements
   const elementsBlock = extractBlock(luaText, 'elements') || '';
   const elements = splitTopLevelEntries(elementsBlock).map((entry) => ({
     type: field(entry, 'type', 'raw'),
     percent: field(entry, 'percent') ?? 0
   })).filter((e) => e.type);
 
-  // Immunities
   const immunitiesBlock = extractBlock(luaText, 'immunities') || '';
   const immunities = splitTopLevelEntries(immunitiesBlock).map((entry) => ({
     type: field(entry, 'type', 'string'),
     condition: field(entry, 'condition', 'bool') ?? false
   })).filter((i) => i.type);
 
-  // Loot
   const lootBlock = extractBlock(luaText, 'loot') || '';
   const loot = splitTopLevelEntries(lootBlock).map((entry, idx) => ({
     uid: Date.now() + idx,
@@ -302,7 +275,6 @@ export function parseMonsterLuaFull(luaText) {
     maxCount: field(entry, 'maxCount') ?? 1
   }));
 
-  // Attacks (con soporte de condition anidado y campos de speed/paralyze)
   const attacksBlock = extractBlock(luaText, 'attacks') || '';
   const attacks = splitTopLevelEntries(attacksBlock).map((entry, idx) => {
     const conditionMatch = entry.match(/condition\s*=\s*\{([^}]*)\}/);
@@ -330,7 +302,6 @@ export function parseMonsterLuaFull(luaText) {
     return attack;
   });
 
-  // Bestiary (capital B en el Lua real)
   const bestiaryBlock = extractBlock(luaText, 'Bestiary') || '';
   const bestiary = bestiaryBlock
     ? {
@@ -346,7 +317,6 @@ export function parseMonsterLuaFull(luaText) {
       }
     : null;
 
-  // Voices
   const voicesBlock = extractBlock(luaText, 'voices') || '';
   const voiceEntries = splitTopLevelEntries(voicesBlock)
     .map((entry, idx) => ({
@@ -361,7 +331,6 @@ export function parseMonsterLuaFull(luaText) {
     list: voiceEntries
   };
 
-  // Summons
   const summonBlock = extractBlock(luaText, 'summon') || '';
   const summonsSubBlock = extractSubBlock(summonBlock, 'summons');
   const summons = summonsSubBlock
@@ -399,10 +368,6 @@ export function parseMonsterLuaFull(luaText) {
   };
 }
 
-// Intenta extraer datos básicos (nombre, looktype, health, experience) de un
-// archivo .lua de monstruo existente — usado como base rápida por
-// parseMonsterLuaFull() y también de forma independiente si solo se
-// necesita una vista previa ligera.
 export function parseMonsterLuaBasic(luaText) {
   const nameMatch = luaText.match(/Game\.createMonsterType\(\s*"([^"]+)"/);
   const lookTypeMatch = luaText.match(/lookType\s*=\s*(\d+)/);

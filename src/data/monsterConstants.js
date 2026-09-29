@@ -1,6 +1,3 @@
-// monsterConstants.js
-// Constantes extraídas directamente del código fuente real de monstruos de
-// CrystalServer (https://github.com/zimbadev/crystalserver), no inventadas.
 
 export const BESTIARY_RACES = [
   'BESTY_RACE_AMPHIBIC',
@@ -15,7 +12,7 @@ export const BESTIARY_RACES = [
   'BESTY_RACE_GIANT',
   'BESTY_RACE_HUMAN',
   'BESTY_RACE_HUMANOID',
-  'BESTY_RACE_INKBORN', // categoría reciente (Tibia moderno, 15.x)
+  'BESTY_RACE_INKBORN',
   'BESTY_RACE_LYCANTHROPE',
   'BESTY_RACE_MAGICAL',
   'BESTY_RACE_MAMMAL',
@@ -26,8 +23,6 @@ export const BESTIARY_RACES = [
   'BESTY_RACE_VERMIN'
 ];
 
-// Los 10 tipos de daño/elemento estándar (monster.elements), en el orden en
-// que aparecen siempre en los monstruos reales de CrystalServer.
 export const COMBAT_ELEMENTS = [
   'COMBAT_PHYSICALDAMAGE',
   'COMBAT_ENERGYDAMAGE',
@@ -41,21 +36,15 @@ export const COMBAT_ELEMENTS = [
   'COMBAT_DEATHDAMAGE'
 ];
 
-// Tipos de inmunidad a condiciones (monster.immunities) realmente usados.
 export const IMMUNITY_TYPES = ['paralyze', 'outfit', 'invisible', 'bleed', 'drunk', 'fire', 'ice'];
 
-// Valores típicos de monster.race (afecta sangre/decay del cadáver).
 export const RACE_TYPES = ['blood', 'venom', 'undead', 'fire', 'energy'];
 
-// Nombres de ataque más comunes (monster.attacks[].name). El campo es texto
-// libre en Lua, esto es solo una ayuda de autocompletado.
 export const COMMON_ATTACK_NAMES = [
   'melee', 'combat', 'poisonfield', 'firefield', 'energyfield', 'condition',
   'speed', 'outfit', 'invisible', 'drunk', 'physical', 'drown'
 ];
 
-// Tipos de condición real para daño continuo (DoT) en ataques
-// (monster.attacks[].condition.type).
 export const CONDITION_TYPES = [
   'CONDITION_POISON',
   'CONDITION_FIRE',
@@ -66,7 +55,6 @@ export const CONDITION_TYPES = [
   'CONDITION_CURSED'
 ];
 
-// Efectos visuales comunes para ataques tipo "speed" (paralyze/slow).
 export const COMMON_SHOOT_EFFECTS = [
   'CONST_ME_MAGIC_RED',
   'CONST_ME_MAGIC_GREEN',

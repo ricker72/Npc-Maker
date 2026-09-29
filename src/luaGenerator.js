@@ -1,6 +1,3 @@
-// luaGenerator.js
-// Genera scripts Lua 100% compatibles con el formato real de Canary
-// (basado en npcType:register, NpcHandler, KeywordHandler, etc.)
 
 const sanitizeName = (name) => (name || 'unnamed_npc').replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
 
@@ -45,7 +42,6 @@ export function generateNpcLua(npc) {
   s += `\tfloorchange = ${floorChange ? 'true' : 'false'},\n`;
   s += `}\n\n`;
 
-  // Shop
   const hasShop = shop?.items?.length > 0;
   if (hasShop) {
     s += `-- Npc shop\n`;
@@ -143,12 +139,4 @@ export function generateNpcLua(npc) {
 
 export function getNpcFileName(name) {
   return `${sanitizeName(name)}.lua`;
-}
-
-// URL del API público usado por canary-npc-maker para renderizar el sprite del outfit
-export function buildOutfitImageUrl(outfit) {
-  const { lookType, lookHead, lookBody, lookLegs, lookFeet, lookAddons, lookMount } = outfit;
-  const base = 'https://outfit-images-oracle.ots.me/latest_walk/animoutfit.php';
-  const mount = lookMount || 0;
-  return `${base}?id=${lookType}&addons=${lookAddons}&head=${lookHead}&body=${lookBody}&legs=${lookLegs}&feet=${lookFeet}&mount=${mount}&direction=3`;
 }

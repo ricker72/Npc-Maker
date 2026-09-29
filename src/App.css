@@ -248,6 +248,18 @@ body {
 
 .btn-danger-sm:hover { box-shadow: 0 6px 16px rgba(231, 76, 60, 0.4); }
 
+/* La paleta de la tienda desactiva "Añadir" si el item ya esta en la lista y
+   "Quitar" si no esta. Sin esto los botones parecerian pulsables. */
+.btn:disabled,
+.btn-gold-sm:disabled,
+.btn-danger-sm:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  filter: grayscale(0.6);
+  transform: none !important;
+  box-shadow: none !important;
+}
+
 .pill-btn {
   padding: 6px 14px;
   border-radius: 20px;
@@ -318,17 +330,10 @@ body {
   align-items: center;
   justify-content: center;
   position: relative;
-  /* Sin overflow:hidden: el sprite real de la API (outfit-images-oracle) no
-     tiene el tamaño/proporción que asumíamos antes, y recortarlo con un
-     contenedor más chico que la imagen escalada cortaba el personaje a una
-     esquina. Dejamos que la imagen se centre libremente con flexbox. */
 }
 
 .character-sprite {
   image-rendering: pixelated;
-  /* La escala real usada por la implementación de referencia que sí
-     funciona es apenas 1.5x sobre una imagen ya de tamaño razonable —
-     no 8x como se usaba antes, que la recortaba a una esquina. */
   transform: scale(2.2);
   filter: drop-shadow(0 4px 6px rgba(0,0,0,0.6));
 }
@@ -400,6 +405,72 @@ body {
   font-size: 11px;
   max-width: 260px;
 }
+
+.assets-missing-notice {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 14px;
+  border: 1px dashed rgba(212, 175, 55, 0.45);
+  border-radius: 10px;
+  background: rgba(212, 175, 55, 0.06);
+  color: var(--text-secondary);
+  text-align: center;
+  max-width: 340px;
+  margin: 0 auto;
+}
+
+.assets-missing-notice.compact {
+  padding: 10px;
+  gap: 6px;
+}
+
+.assets-missing-icon { font-size: 26px; opacity: 0.8; }
+
+.assets-missing-text {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.assets-missing-link {
+  color: var(--gold-light);
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.assets-missing-link:hover { color: var(--primary-gold); }
+
+.tibia-item-sprite,
+.outfit-list-thumb {
+  image-rendering: pixelated;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
+.outfit-list-thumb { margin-right: 6px; }
+
+.shop-item-thumb { margin-right: 6px; }
+
+.shop-item-thumb-lg { margin-right: 10px; }
+
+.item-picker-selected {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 10px;
+  margin-bottom: 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.item-picker-selected-info { display: flex; flex-direction: column; }
+.item-picker-selected-info small { color: var(--text-secondary); font-size: 11px; }
 
 .outfit-controls-panel { display: flex; flex-direction: column; gap: 18px; }
 
@@ -591,6 +662,186 @@ body {
   grid-template-columns: 1fr 1fr 80px auto;
   gap: 10px;
   align-items: flex-end;
+
+/* ============ Item Palette (inspirada en el Items palette del RME) ============ */
+.item-palette {
+  background: rgba(15, 15, 15, 0.5);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 16px;
+}
+
+.item-palette-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.item-palette-search { flex: 1; margin-bottom: 0 !important; }
+
+.item-palette-count {
+  color: var(--text-secondary);
+  font-size: 11px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.item-palette-cats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.item-palette-cat {
+  background: rgba(37, 37, 37, 0.8);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  padding: 5px 12px;
+  border-radius: 14px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.item-palette-cat:hover { border-color: var(--primary-gold); color: var(--gold-light); }
+
+.item-palette-cat.active {
+  background: rgba(212, 175, 55, 0.18);
+  border-color: var(--primary-gold);
+  color: var(--gold-light);
+  font-weight: 600;
+}
+
+/* Panel de la tarjeta seleccionada, con los botones anadir/quitar */
+.item-palette-selected {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  background: rgba(212, 175, 55, 0.08);
+  border: 1px solid var(--primary-gold);
+  border-radius: 8px;
+}
+
+.item-palette-selected-info { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.item-palette-selected-info small { color: var(--text-secondary); font-size: 11px; }
+.item-palette-official { color: var(--accent-green) !important; }
+
+.item-palette-actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+/* Rejilla de tarjetas con scroll propio, al estilo del panel del RME */
+.item-palette-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 8px;
+  max-height: 420px;
+  overflow-y: auto;
+  padding: 4px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  /* Contain ayuda al navegador a no repintar las 9000+ tarjetas al hacer scroll */
+  contain: content;
+}
+
+.item-palette-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 4px 6px;
+  background: rgba(37, 37, 37, 0.7);
+  border: 1px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.12s ease;
+  min-width: 0;
+}
+
+.item-palette-tile:hover {
+  background: rgba(212, 175, 55, 0.12);
+  border-color: rgba(212, 175, 55, 0.5);
+}
+
+.item-palette-tile.selected {
+  background: rgba(212, 175, 55, 0.2);
+  border-color: var(--primary-gold);
+  box-shadow: 0 0 0 1px var(--primary-gold), 0 0 10px rgba(212, 175, 55, 0.3);
+}
+
+/* Marca los items que ya estan en la tienda */
+.item-palette-tile.in-shop { border-color: rgba(46, 204, 113, 0.5); }
+
+.item-palette-sprite {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 4px;
+  margin-bottom: 3px;
+}
+
+.item-palette-name {
+  font-size: 10.5px;
+  color: var(--text-primary);
+  line-height: 1.25;
+  /* Recorta a 2 lineas para que todas las tarjetas tengan la misma altura */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  word-break: break-word;
+}
+
+.item-palette-id { font-size: 9.5px; color: var(--text-secondary); }
+
+.item-palette-badge {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  background: var(--accent-green);
+  color: #0f0f0f;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.item-palette-more-hint {
+  margin-top: 8px;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+
+/* Busqueda manual, plegada por defecto bajo la paleta */
+.shop-manual-add { margin-bottom: 16px; }
+
+.shop-manual-add summary {
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 13px;
+  padding: 8px 4px;
+  user-select: none;
+}
+
+.shop-manual-add summary:hover { color: var(--gold-light); }
+
+.shop-manual-add-body { padding-top: 10px; }
+
 }
 
 /* ============ Lists (shop / dialogs) ============ */
@@ -773,6 +1024,12 @@ body {
   background: rgba(46, 204, 113, 0.12);
   border: 1px solid var(--accent-green);
   color: var(--accent-green);
+}
+
+.inline-notice.info {
+  background: rgba(52, 152, 219, 0.12);
+  border: 1px solid var(--accent-blue);
+  color: #7fc4f0;
 }
 
 .ai-explanation {
@@ -1159,8 +1416,11 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  /* Sin overflow:hidden: recortaba el sprite a una esquina cuando la
-     imagen real (más grande de lo asumido) se escalaba de más. */
+  /* overflow:hidden vuelve a estar aqui como red de seguridad: antes lo
+     quitaron porque el sprite se escalaba de mas y se salia del cuadro, pero
+     la causa real (escala calculada solo con el ancho + transform: scale(2.2))
+     ya esta corregida en TibiaOutfitCanvas.jsx / spriteCompositor.js. */
+  overflow: hidden;
   margin: 8px 0 12px;
 }
 
@@ -1204,13 +1464,23 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  /* Sin overflow:hidden: ver nota en .character-viewer más arriba. */
+  /* Red de seguridad; la causa del desborde ya se corrigio en JS (ver nota
+     arriba en .npc-context-sprite-centered). */
+  overflow: hidden;
   margin-bottom: 12px;
 }
 
+/* El canvas ya se dibuja escalado y centrado por `fitToBox` en JS, asi que
+   aqui NO se aplica ningun transform: scale() adicional. Antes se usaba
+   scale(2.2) sobre un lienzo de 96px (=211px) dentro de una caja de 140px,
+   por eso las criaturas se veian enormes y se salian del cuadro.
+
+   Ojo: .tibia-outfit-canvas (regla global) aplica scale(1.1) a este mismo
+   canvas, asi que el tamano real en pantalla es 120 x 1.1 = 132px, dentro de
+   la caja de 140px. Cabe, pero sin margen: si se sube `size` en
+   MonsterLibrary.jsx hay que subir tambien la caja o quitar ese 1.1. */
 .character-sprite-bestiary {
   image-rendering: pixelated;
-  transform: scale(2.2);
   filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6));
 }
 
@@ -1279,6 +1549,68 @@ body {
 .bestiary-stat-defense .bestiary-stat-value { color: var(--text-primary); }
 
 .bestiary-edit-btn { width: 100%; }
+
+/* ============ Bestiario oficial: pestañas de familia ============ */
+.family-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 10px 0 16px;
+}
+
+.family-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.family-tab:hover { color: var(--text-primary); border-color: var(--gold); }
+
+.family-tab.active {
+  color: #1a1408;
+  background: var(--gold);
+  border-color: var(--gold);
+}
+
+.family-tab-count {
+  font-size: 10px;
+  font-weight: 800;
+  opacity: 0.8;
+}
+
+.family-block { margin-bottom: 26px; }
+
+.family-block-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 10px;
+  padding-bottom: 6px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--gold-light);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.family-block-title .family-tab-count { color: var(--text-secondary); }
+
+.family-more-btn {
+  display: block;
+  margin: 8px auto 0;
+}
 
 /* ============ Privacy HUD (Centro de Privacidad) ============ */
 .privacy-hud { display: flex; flex-direction: column; gap: 16px; }
@@ -1409,4 +1741,224 @@ body {
   .script-creator-two-col { grid-template-columns: 1fr; }
   .npc-context-sprite-centered { max-width: 160px; }
 }
+@media (max-width: 900px) {
+  .script-creator-two-col { grid-template-columns: 1fr; }
+  .npc-context-sprite-centered { max-width: 160px; }
+}
+
+/* ============ Banner de actualizaciones (GitHub Releases) ============ */
+.update-banner {
+  background: linear-gradient(90deg, rgba(212, 175, 55, 0.14) 0%, rgba(26, 26, 26, 0.95) 60%);
+  border-bottom: 1px solid var(--primary-gold);
+  padding: 10px 24px;
+  animation: fadeIn 0.3s ease;
+}
+
+.update-banner-main {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.update-banner-icon { font-size: 20px; }
+
+.update-banner-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 220px;
+}
+
+.update-banner-text strong {
+  font-size: 13.5px;
+  color: var(--gold-light);
+  letter-spacing: 0.3px;
+}
+
+.update-version {
+  font-family: 'Consolas', 'Monaco', monospace;
+  color: var(--primary-gold);
+}
+
+.update-prerelease-tag {
+  margin-left: 8px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #0f0f0f;
+  background: var(--primary-gold);
+  border-radius: 4px;
+  padding: 1px 6px;
+}
+
+.update-banner-sub { font-size: 11.5px; color: var(--text-secondary); }
+
+.update-banner-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.btn-outline-sm {
+  padding: 7px 12px;
+  font-size: 12px;
+  border: 1px solid var(--primary-gold);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--gold-light);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.btn-outline-sm:hover {
+  background: rgba(212, 175, 55, 0.12);
+  transform: translateY(-1px);
+}
+
+.btn-ghost-sm {
+  padding: 7px 10px;
+  font-size: 12px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-ghost-sm:hover { color: var(--text-primary); border-color: var(--border-color); }
+
+.update-banner-notes {
+  margin-top: 10px;
+  border-top: 1px dashed rgba(212, 175, 55, 0.35);
+  padding-top: 10px;
+  animation: fadeIn 0.25s ease;
+}
+
+.update-notes-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.update-notes-link {
+  color: var(--primary-gold);
+  cursor: pointer;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.update-notes-link:hover { text-decoration: underline; }
+
+.update-notes-body {
+  max-height: 220px;
+  overflow-y: auto;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 12px 14px;
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--text-primary);
+  white-space: pre-wrap;
+  word-break: break-word;
+  user-select: text;
+}
+
+.update-assets-list {
+  list-style: none;
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* ============ Diálogo modal de actualización (pregunta Descargar Sí/No) ============ */
+.update-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.65);
+  animation: fadeIn 0.25s ease;
+}
+
+.update-dialog {
+  max-width: 460px;
+  width: 100%;
+  background: linear-gradient(160deg, #1e1a10 0%, #141414 55%);
+  border: 1px solid var(--primary-gold);
+  border-radius: 12px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.7), 0 0 32px rgba(212, 175, 55, 0.15);
+  padding: 28px 28px 24px;
+  text-align: center;
+  animation: updateDialogPop 0.28s ease;
+}
+
+@keyframes updateDialogPop {
+  from { transform: scale(0.92) translateY(10px); opacity: 0; }
+  to { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+.update-dialog-icon { font-size: 44px; margin-bottom: 8px; }
+
+.update-dialog-title {
+  font-size: 18px;
+  color: var(--gold-light);
+  margin: 0 0 10px;
+  letter-spacing: 0.3px;
+}
+
+.update-dialog-message {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--text-primary);
+  margin: 0 0 14px;
+}
+
+.update-dialog-versions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 13px;
+  color: var(--text-secondary);
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 6px;
+}
+
+.update-dialog-versions strong { color: var(--text-primary); }
+
+.update-dialog-arrow { color: var(--primary-gold); font-weight: 700; }
+
+.update-dialog-release-name {
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  font-style: italic;
+  margin: 8px 0 0;
+}
+
+.update-dialog-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 18px;
+}
+
 

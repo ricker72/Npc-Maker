@@ -1,8 +1,3 @@
-// crystalServerKnowledge.js
-// Conocimiento técnico extraído directamente del código fuente real de
-// https://github.com/zimbadev/crystalserver (protocolo 15.24, fork de Canary/TFS moderno)
-// Se usa como contexto del sistema para que la IA genere y corrija scripts
-// 100% compatibles con la API real del servidor.
 
 export const CRYSTAL_SERVER_SYSTEM_PROMPT = `Eres un experto desarrollador de scripts Lua para CrystalServer
 (https://github.com/zimbadev/crystalserver), un servidor OpenTibia para el protocolo 15.24,
@@ -128,10 +123,6 @@ Cuando se te pida REVISAR/CORREGIR un script: identifica explícitamente qué pa
 incompatibles o están desactualizadas, explica brevemente cada corrección, y entrega el script
 completo ya corregido y listo para usar en CrystalServer.`;
 
-// Las etiquetas visibles ahora viven en los diccionarios de i18n
-// (scriptCreator.scriptTypeNpc, scriptTypeAction, etc.) para soportar los
-// 3 idiomas de la app. Este array solo define las claves/valores reales
-// que se usan al construir el prompt para la IA.
 export const SCRIPT_TYPES_KEYS = [
   'npc',
   'action',

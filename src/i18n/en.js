@@ -1,4 +1,3 @@
-// English translation dictionary
 export default {
   common: {
     appName: 'NPC Maker Pro',
@@ -110,6 +109,16 @@ export default {
     sellLabel: 'Sell message (format: %ix %s for %i gold.)'
   },
 
+  assets: {
+    loaded: 'Client assets loaded',
+    loading: 'Loading…',
+    selectFolder: 'Load the client "assets" folder',
+    changeFolder: 'Change folder',
+    downloadZip: 'Download Tibia 15.33 client assets',
+    missingVersion: 'Tibia client assets not found. Select the "assets" folder of your client or download the package to see the previews.',
+    lookMissing: 'This lookType does not exist in your client appearances-*.dat. Download the 15.33 assets to see it.'
+  },
+
   shop: {
     title: 'NPC Shop',
     hint: 'Search real items by name or ID (built-in Tibia/Canary database). Set a buy price (buy = the NPC sells to the player) and/or sell price (sell = the NPC buys from the player).',
@@ -123,7 +132,35 @@ export default {
     enterPrice: 'Enter at least a buy or sell price.',
     itemAdded: 'Item added.',
     buy: 'Buy',
-    sell: 'Sell'
+    sell: 'Sell',
+    officialNpcPrice: 'Official NPC price',
+    manualSearchTitle: 'Add or search an item manually'
+  },
+
+  shopPalette: {
+    searchPlaceholder: 'Search item in the palette...',
+    add: 'Add',
+    remove: 'Remove',
+    addShort: 'Add to shop',
+    removeShort: 'Remove from shop',
+    added: 'Item added to the shop.',
+    removed: 'Item removed from the shop.',
+    alreadyInShop: 'That item is already in the shop.',
+    notInShop: 'That item is not in the shop.',
+    noResults: 'No items match your search.',
+    moreHint: 'Scroll down to load {count} more items...',
+    inShop: 'In shop',
+    categories: {
+      all: 'All',
+      weapons: 'Weapons',
+      armor: 'Armor',
+      deposits: 'Deposits',
+      tools: 'Tools',
+      coins: 'Coins',
+      runes: 'Runes',
+      quest: 'Quest',
+      misc: 'Misc'
+    }
   },
 
   keywords: {
@@ -285,6 +322,14 @@ export default {
   monsterLibrary: {
     title: '📚 Creature Library',
     hint: 'Import your own .lua monster files (from your Canary/CrystalServer server) to browse and edit them here. Also includes a small curated reference set (TibiaWiki, CC-BY-SA) to get started quickly.',
+    officialHint: 'Official Tibia client bestiary: every creature with its real looktype (clientid), health, experience, loot, attacks, defenses and resistances, grouped by family. Click any creature to load it fully into the editor.',
+    officialBestiary: 'Official bestiary',
+    officialSource: 'Source: {file} · {monsters} monsters · {bosses} bosses · {families} families · regenerated on {date}',
+    allFamilies: 'All',
+    noLoot: 'no loot',
+    loadingBestiary: 'Loading the official bestiary…',
+    showMore: 'Show {count} more…',
+    bestiaryError: 'Could not load src/data/monsters.json. Regenerate it with: npm run data:monsters',
     importFiles: 'Import .lua files',
     searchPlaceholder: 'Search creature...',
     yourImported: 'Your imported files',
@@ -294,7 +339,6 @@ export default {
     lootCount: 'loot',
     attacksCount: 'attacks',
     resist: 'resist',
-    // Bestiary-style card
     family: 'Family',
     attack: 'Attack',
     defense: 'Defense'
@@ -345,7 +389,29 @@ export default {
     s4p2: 'You can verify the file is fully safe by compiling it yourself directly from source or by using the official hashes published in the repository releases.',
     s4note: 'Installer = convenience. Portable = total isolation without touching the registry. Both come from the same code via GitHub Actions.'
   },
+
+  update: {
+    title: 'New version available:',
+    current: 'Installed:',
+    prerelease: 'Pre-release',
+    download: 'Download',
+    releaseNotes: 'Notes',
+    later: 'Later',
+    laterHint: 'Hide only for this session',
+    never: 'Don\'t ask',
+    neverHint: 'Never show this notice again for this version',
+    notesFrom: 'Release notes from',
+    openFullNotes: 'View full release on GitHub',
+    noNotes: 'This release has no changelog.',
+    dialogTitle: 'New version available! 🎉',
+    dialogMessage: 'A new version of NPC Maker Pro is ready to download. Would you like to download it now?',
+    dialogInstalled: 'Installed version',
+    dialogAvailable: 'New version',
+    dialogYes: 'Yes, download',
+    dialogLater: 'Later',
+    dialogDontAsk: "Don't ask again for this version"
+  },
+
   outfitList: {
-    // used for gender toggle labels already in common (male/female)
   }
 };

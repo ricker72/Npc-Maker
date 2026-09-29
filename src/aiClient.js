@@ -1,21 +1,7 @@
-// aiClient.js
-// Cliente para llamar al proveedor de IA configurado (por defecto api.paxsenix.org).
-//
-// NOTA: api.paxsenix.org no es un servicio oficial de Anthropic ni está documentado
-// en este entorno (no se pudo verificar su esquema exacto de request/response al
-// construir esta integración). Por eso:
-//   1) El parsing de la respuesta intenta varios formatos comunes (estilo OpenAI,
-//      estilo genérico { content }/{ result }/{ response }/{ text }, etc.)
-//   2) El endpoint y el modelo son editables desde "⚙️ Configuración avanzada" en
-//      el Script Creator, sin tocar código, en caso de que el formato real difiera.
-//
-// Si tienes la documentación oficial de api.paxsenix.org, ajusta buildRequestBody()
-// y parseResponse() para que coincidan exactamente.
 
 import { getEmbeddedApiKey, DEFAULT_AI_ENDPOINT, DEFAULT_AI_MODEL } from './secureConfig';
 
 function buildRequestBody({ model, system, prompt, maxTokens }) {
-  // Formato estilo OpenAI Chat Completions (el más común entre agregadores/proxies de IA)
   return {
     model,
     max_tokens: maxTokens,
@@ -27,7 +13,6 @@ function buildRequestBody({ model, system, prompt, maxTokens }) {
 }
 
 function parseResponseText(data) {
-  // Intenta varios formatos de respuesta conocidos, en orden de probabilidad.
   if (typeof data === 'string') return data;
 
   const tryPaths = [
@@ -47,7 +32,6 @@ function parseResponseText(data) {
       const value = tryPath();
       if (typeof value === 'string' && value.trim()) return value;
     } catch {
-      // sigue intentando con el siguiente formato
     }
   }
 
@@ -105,7 +89,6 @@ export async function callAI({
   return text;
 }
 
-// Extrae el primer bloque de código Lua de una respuesta en markdown.
 export function extractLuaCode(responseText) {
   const luaBlockMatch = responseText.match(/```lua\s*([\s\S]*?)```/i);
   if (luaBlockMatch) return luaBlockMatch[1].trim();

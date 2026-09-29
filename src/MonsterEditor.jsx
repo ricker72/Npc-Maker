@@ -47,7 +47,6 @@ const MonsterEditor = () => {
 
   const copyLua = () => navigator.clipboard.writeText(luaCode);
 
-  // ───── Loot ─────
   const addLootItem = () => {
     update({ loot: [...monster.loot, { uid: Date.now(), name: '', chance: 1000, maxCount: 1 }] });
   };
@@ -58,7 +57,6 @@ const MonsterEditor = () => {
     update({ loot: monster.loot.filter((it) => it.uid !== uid) });
   };
 
-  // ───── Attacks ─────
   const addAttack = () => {
     update({ attacks: [...monster.attacks, { uid: Date.now(), name: 'melee', interval: 2000, chance: 100, minDamage: 0, maxDamage: -10 }] });
   };
@@ -69,7 +67,6 @@ const MonsterEditor = () => {
     update({ attacks: monster.attacks.filter((a) => a.uid !== uid) });
   };
 
-  // ───── Elements / Immunities ─────
   const updateElement = (type, percent) => {
     update({ elements: monster.elements.map((e) => (e.type === type ? { ...e, percent } : e)) });
   };
@@ -77,7 +74,6 @@ const MonsterEditor = () => {
     update({ immunities: monster.immunities.map((i) => (i.type === type ? { ...i, condition } : i)) });
   };
 
-  // ───── Defense Abilities (auto-buffs como "speed" dentro de defenses) ─────
   const addDefenseAbility = () => {
     update({ defenseAbilities: [...(monster.defenseAbilities || []), { uid: Date.now(), name: 'speed', interval: 2000, chance: 15, speedChange: 200, duration: 5000, effect: '' }] });
   };
@@ -88,7 +84,6 @@ const MonsterEditor = () => {
     update({ defenseAbilities: monster.defenseAbilities.filter((d) => d.uid !== uid) });
   };
 
-  // ───── Voices ─────
   const addVoice = () => {
     updateNested('voices', { list: [...(monster.voices.list || []), { uid: Date.now(), text: '', yell: false }] });
   };
@@ -99,7 +94,6 @@ const MonsterEditor = () => {
     updateNested('voices', { list: monster.voices.list.filter((v) => v.uid !== uid) });
   };
 
-  // ───── Summons ─────
   const addSummon = () => {
     updateNested('summon', { summons: [...(monster.summon.summons || []), { uid: Date.now(), name: '', chance: 10, interval: 2000, count: 1 }] });
   };
@@ -134,9 +128,6 @@ const MonsterEditor = () => {
           <button className="btn btn-gold-sm" onClick={copyLua}>📋 {t('common.copy')}</button>
         </div>
       </div>
-
-      {/* Todos los sub-paneles quedan siempre montados (igual que el resto
-          de la app) para no perder lo editado al cambiar de sub-pestaña. */}
 
       <div style={{ display: subTab === 'basic' ? 'block' : 'none' }}>
         <div className="section">
@@ -499,7 +490,6 @@ const MonsterEditor = () => {
                     <button className="btn btn-danger-sm" onClick={() => removeAttack(a.uid)}>🗑️</button>
                   </div>
 
-                  {/* Daño continuo (condition: poison/fire/energy/etc) */}
                   <div className="attack-extra-row">
                     <label className="checkbox-label">
                       <input
@@ -542,7 +532,6 @@ const MonsterEditor = () => {
                     )}
                   </div>
 
-                  {/* Speed change (paralyze/slow al jugador) */}
                   <div className="attack-extra-row">
                     <label className="checkbox-label">
                       <input
